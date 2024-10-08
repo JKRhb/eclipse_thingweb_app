@@ -1,14 +1,22 @@
+import 'package:dart_wot/binding_mqtt.dart';
+import 'package:dart_wot/binding_http.dart';
+import 'package:dart_wot/core.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import "dart:math";
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  final servient = Servient.create(clientFactories: [MqttClientFactory(), HttpClientFactory()]);
+  final wot = await servient.start();
+
+  runApp(WotApp(wot));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class WotApp extends StatelessWidget {
+  const WotApp(this._wot, {super.key});
+
+  final WoT _wot;
 
   // This widget is the root of your application.
   @override
@@ -34,13 +42,17 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'OSX Demo App'),
+      home: MyHomePage(_wot, title: 'OSX Demo App'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage(
+    this._wot, {
+    super.key,
+    required this.title,
+  });
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -53,11 +65,15 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
+  final WoT _wot;
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  _MyHomePageState();
+
   int _counter = 0;
 
   final List<(double, double)> _data = [];
@@ -74,7 +90,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final int _maxElements = 50;
 
-  void _incrementCounter() {
+  Future<void> _incrementCounter() async {
+    final yo = await widget._wot.requestThingDescription(
+        Uri.parse("https://zion.vaimee.com/.well-known/wot"));
+    print(yo.title);
+
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
