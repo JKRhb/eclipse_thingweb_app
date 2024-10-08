@@ -60,7 +60,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  List<(double, double)> _data = [];
+  final List<(double, double)> _data = [];
 
   final int _maxElements = 50;
 
@@ -73,10 +73,6 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
 
       _data.add((_counter.toDouble(), Random().nextDouble() * 100));
-
-      if (_data.length > _maxElements) {
-        _data.removeAt(0);
-      }
 
       _counter++;
     });
@@ -148,7 +144,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       LineChartBarData(
                           show: true,
                           isCurved: true,
-                          spots: _data.map((e) => FlSpot(e.$1, e.$2)).toList())
+                          spots: _data.reversed
+                              .take(_maxElements)
+                              .map((e) => FlSpot(e.$1, e.$2))
+                              // TODO: Check performance
+                              .toList()
+                              .reversed
+                              .toList())
                     ],
                   ),
                   duration: Duration.zero,
