@@ -62,6 +62,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final List<(double, double)> _data = [];
 
+  List<(double, double)> get _dataWindow {
+    final result = <(double, double)>[];
+
+    for (var i = max(0, _data.length - _maxElements); i < _data.length; i++) {
+      result.add(_data[i]);
+    }
+
+    return result;
+  }
+
   final int _maxElements = 50;
 
   void _incrementCounter() {
@@ -144,12 +154,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       LineChartBarData(
                           show: true,
                           isCurved: true,
-                          spots: _data.reversed
-                              .take(_maxElements)
+                          spots: _dataWindow
                               .map((e) => FlSpot(e.$1, e.$2))
-                              // TODO: Check performance
-                              .toList()
-                              .reversed
                               .toList())
                     ],
                   ),
