@@ -1,4 +1,7 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+
+import "dart:math";
 
 void main() {
   runApp(const MyApp());
@@ -31,7 +34,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'OSX Demo App'),
     );
   }
 }
@@ -57,6 +60,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  List<(double, double)> _data = [];
+
+  final int _maxElements = 50;
+
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -64,6 +71,13 @@ class _MyHomePageState extends State<MyHomePage> {
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
+
+      _data.add((_counter.toDouble(), Random().nextDouble() * 100));
+
+      if (_data.length > _maxElements) {
+        _data.removeAt(0);
+      }
+
       _counter++;
     });
   }
@@ -105,6 +119,40 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            AspectRatio(
+                aspectRatio: 2.0,
+                child: LineChart(
+                  LineChartData(
+                    minY: 0,
+                    maxY: 100,
+                    clipData: const FlClipData.all(),
+                    titlesData: const FlTitlesData(
+                      bottomTitles: AxisTitles(
+                        axisNameWidget: Text('Insert property name here'),
+                        axisNameSize: 24,
+                        sideTitles: SideTitles(
+                          showTitles: false,
+                          reservedSize: 0,
+                        ),
+                      ),
+                      topTitles: AxisTitles(
+                        axisNameWidget: Text('Insert time stamps here.'),
+                        axisNameSize: 24,
+                        sideTitles: SideTitles(
+                          showTitles: false,
+                          reservedSize: 0,
+                        ),
+                      ),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                          show: true,
+                          isCurved: true,
+                          spots: _data.map((e) => FlSpot(e.$1, e.$2)).toList())
+                    ],
+                  ),
+                  duration: Duration.zero,
+                )),
             const Text(
               'You have pushed the button this many times:',
             ),
