@@ -1,30 +1,22 @@
-// This is a basic Flutter widget test.
+// Copyright 2024 Contributors to the Eclipse Foundation. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:flutter/material.dart';
+import 'package:dart_wot/core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecplise_thingweb_demo_app/main.dart';
+import 'package:eclipse_thingweb_demo_app/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    final servient = Servient.create();
+    final wot = await servient.start();
+    final preferences = SharedPreferencesAsync();
+
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pumpWidget(WotApp(wot, preferences));
   });
 }
