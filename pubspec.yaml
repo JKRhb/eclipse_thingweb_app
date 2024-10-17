@@ -28,6 +28,8 @@ flutter:
     - assets/images/thingweb.png
 
 flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
   image_path: "assets/images/thingweb.png"
   macos:
     generate: true
