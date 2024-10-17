@@ -6,8 +6,23 @@ import 'package:flutter/material.dart';
 
 import "dart:math";
 
+final Map<String, BasicCredentials> basicCredentials = {
+  "urn:test": const BasicCredentials("rw", "readwrite"),
+};
+
+Future<BasicCredentials?> basicCredentialsCallback(
+  Uri uri,
+  AugmentedForm? form, [
+  BasicCredentials? invalidCredentials,
+]) async {
+  final id = form?.tdIdentifier;
+
+  return basicCredentials[id];
+}
+
 Future<void> main() async {
-  final servient = Servient.create(clientFactories: [MqttClientFactory(), HttpClientFactory()]);
+  final servient = Servient.create(
+      clientFactories: [MqttClientFactory(basicCredentialsCallback: basicCredentialsCallback), HttpClientFactory()]);
   final wot = await servient.start();
 
   runApp(WotApp(wot));
@@ -24,7 +39,8 @@ class WotApp extends StatelessWidget {
     return MaterialApp(
       title: 'Eclipse Thingweb OSX Demo App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(51, 184, 164, 0)),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromRGBO(51, 184, 164, 0)),
         useMaterial3: true,
       ),
       home: MyHomePage(_wot, title: 'OSX Demo App'),
@@ -75,10 +91,51 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final int _maxElements = 50;
 
+  ConsumedThing? _consumedThing;
+
   Future<void> _incrementCounter() async {
     final yo = await widget._wot.requestThingDescription(
         Uri.parse("https://zion.vaimee.com/.well-known/wot"));
     print(yo.title);
+
+    if (_consumedThing == null) {
+      final thingDescription = ThingDescription.fromJson(const {
+        "@context": "https://www.w3.org/2022/wot/td/v1.1",
+        "id": "urn:test",
+        "title": "MQTT Test Thing",
+        "security": ["auto_sc"],
+        "securityDefinitions": {
+          "auto_sc": {"scheme": "auto"},
+        },
+        "properties": {
+          "voltage": {
+            "type": "integer",
+            "observable": true,
+            "forms": [
+              {
+                "href": "mqtt://test.mosquitto.org:1884",
+                "mqv:filter": "test",
+                "op": ["readproperty", "observeproperty"],
+                "contentType": "text/plain",
+              }
+            ],
+          }
+        }
+      });
+
+      final consumedThing = await widget._wot.consume(thingDescription);
+      consumedThing.observeProperty("voltage", (interactionOutput) async {
+        final value = await interactionOutput.value();
+
+        if (value is int) {
+          setState(() {
+            _data.add((_counter.toDouble(), Random().nextDouble() * 100));
+            _counter++;
+          });
+        }
+      });
+      _consumedThing = consumedThing;
+    }
 
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -130,57 +187,77 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            AspectRatio(
-                aspectRatio: 2.0,
-                child: LineChart(
-                  LineChartData(
-                    minY: 0,
-                    maxY: 100,
-                    clipData: const FlClipData.all(),
-                    titlesData: const FlTitlesData(
-                      bottomTitles: AxisTitles(
-                        axisNameWidget: Text('Insert property name here'),
-                        axisNameSize: 24,
-                        sideTitles: SideTitles(
-                          showTitles: false,
-                          reservedSize: 0,
+            if (_data.isNotEmpty)
+              AspectRatio(
+                  aspectRatio: 2.0,
+                  child: LineChart(
+                    LineChartData(
+                      minY: 0,
+                      maxY: 100,
+                      clipData: const FlClipData.all(),
+                      titlesData: const FlTitlesData(
+                        bottomTitles: AxisTitles(
+                          // axisNameWidget: Text('Insert time stamps here.'),
+                          axisNameWidget: Text(''),
+                          axisNameSize: 24,
+                          sideTitles: SideTitles(
+                            showTitles: false,
+                            reservedSize: 0,
+                          ),
+                        ),
+                        topTitles: AxisTitles(
+                          axisNameWidget: Text('Voltage over time'),
+                          axisNameSize: 24,
+                          sideTitles: SideTitles(
+                            showTitles: false,
+                            reservedSize: 0,
+                          ),
                         ),
                       ),
-                      topTitles: AxisTitles(
-                        axisNameWidget: Text('Insert time stamps here.'),
-                        axisNameSize: 24,
-                        sideTitles: SideTitles(
-                          showTitles: false,
-                          reservedSize: 0,
-                        ),
-                      ),
+                      lineBarsData: [
+                        LineChartBarData(
+                            show: true,
+                            isCurved: true,
+                            spots: _dataWindow
+                                .map((e) => FlSpot(e.$1, e.$2))
+                                .toList())
+                      ],
                     ),
-                    lineBarsData: [
-                      LineChartBarData(
-                          show: true,
-                          isCurved: true,
-                          spots: _dataWindow
-                              .map((e) => FlSpot(e.$1, e.$2))
-                              .toList())
-                    ],
-                  ),
-                  duration: Duration.zero,
-                )),
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+                    duration: Duration.zero,
+                  )),
+            // const Text(
+            //   'You have pushed the button this many times:',
+            // ),
+            // Text(
+            //   '$_counter',
+            //   style: Theme.of(context).textTheme.headlineMedium,
+            // ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _incrementCounter,
+            tooltip: 'Increment',
+            child: const Icon(
+              Icons.add,
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          FloatingActionButton(
+            onPressed: _incrementCounter,
+            // onPressed: _discoverTddTd,
+            tooltip: 'Discover',
+            child: const Icon(
+              Icons.explore,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
