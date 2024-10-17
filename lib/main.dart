@@ -21,8 +21,10 @@ Future<BasicCredentials?> basicCredentialsCallback(
 }
 
 Future<void> main() async {
-  final servient = Servient.create(
-      clientFactories: [MqttClientFactory(basicCredentialsCallback: basicCredentialsCallback), HttpClientFactory()]);
+  final servient = Servient.create(clientFactories: [
+    MqttClientFactory(basicCredentialsCallback: basicCredentialsCallback),
+    HttpClientFactory()
+  ]);
   final wot = await servient.start();
 
   runApp(WotApp(wot));
@@ -36,14 +38,15 @@ class WotApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    const title = "Eclipse Thingweb OCX Demo";
     return MaterialApp(
-      title: 'Eclipse Thingweb OSX Demo App',
+      title: title,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
             seedColor: const Color.fromRGBO(51, 184, 164, 0)),
         useMaterial3: true,
       ),
-      home: MyHomePage(_wot, title: 'OSX Demo App'),
+      home: MyHomePage(_wot, title: title),
     );
   }
 }
@@ -89,102 +92,52 @@ class _MyHomePageState extends State<MyHomePage> {
     return result;
   }
 
+  String? _graphTitle;
+
   final int _maxElements = 50;
 
   ConsumedThing? _consumedThing;
 
-  Future<void> _incrementCounter() async {
-    final yo = await widget._wot.requestThingDescription(
-        Uri.parse("https://zion.vaimee.com/.well-known/wot"));
-    print(yo.title);
-
+  Future<void> _triggerConsumption() async {
     if (_consumedThing == null) {
-      final thingDescription = ThingDescription.fromJson(const {
-        "@context": "https://www.w3.org/2022/wot/td/v1.1",
-        "id": "urn:test",
-        "title": "MQTT Test Thing",
-        "security": ["auto_sc"],
-        "securityDefinitions": {
-          "auto_sc": {"scheme": "auto"},
-        },
-        "properties": {
-          "voltage": {
-            "type": "integer",
-            "observable": true,
-            "forms": [
-              {
-                "href": "mqtt://test.mosquitto.org:1884",
-                "mqv:filter": "test",
-                "op": ["readproperty", "observeproperty"],
-                "contentType": "text/plain",
-              }
-            ],
-          }
-        }
-      });
+      const thingDescriptionUrl =
+          "https://gist.githubusercontent.com/JKRhb/a96353072d3e8e7bbf806421ea85e570/raw/2047d057e81d1cbd5661227d2d8933dda1704d12/voltage-meter.td.json";
+
+      final thingDescription = await widget._wot.requestThingDescription(
+        Uri.parse(thingDescriptionUrl),
+      );
+
+      const propertyName = "voltage";
+
+      _graphTitle = thingDescription.properties?[propertyName]?.title;
 
       final consumedThing = await widget._wot.consume(thingDescription);
-      consumedThing.observeProperty("voltage", (interactionOutput) async {
+      consumedThing.observeProperty(propertyName, (interactionOutput) async {
         final value = await interactionOutput.value();
 
         if (value is int) {
           setState(() {
-            _data.add((_counter.toDouble(), Random().nextDouble() * 100));
+            _data.add((_counter.toDouble(), value.toDouble()));
             _counter++;
           });
         }
       });
+
       _consumedThing = consumedThing;
     }
-
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-
-      _data.add((_counter.toDouble(), Random().nextDouble() * 100));
-
-      _counter++;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final foo = _graphTitle != null ? Text("$_graphTitle over Time") : null;
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             if (_data.isNotEmpty)
@@ -195,9 +148,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       minY: 0,
                       maxY: 100,
                       clipData: const FlClipData.all(),
-                      titlesData: const FlTitlesData(
-                        bottomTitles: AxisTitles(
-                          // axisNameWidget: Text('Insert time stamps here.'),
+                      titlesData: FlTitlesData(
+                        bottomTitles: const AxisTitles(
                           axisNameWidget: Text(''),
                           axisNameSize: 24,
                           sideTitles: SideTitles(
@@ -206,9 +158,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                         topTitles: AxisTitles(
-                          axisNameWidget: Text('Voltage over time'),
+                          axisNameWidget: foo,
                           axisNameSize: 24,
-                          sideTitles: SideTitles(
+                          sideTitles: const SideTitles(
                             showTitles: false,
                             reservedSize: 0,
                           ),
@@ -225,13 +177,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     duration: Duration.zero,
                   )),
-            // const Text(
-            //   'You have pushed the button this many times:',
-            // ),
-            // Text(
-            //   '$_counter',
-            //   style: Theme.of(context).textTheme.headlineMedium,
-            // ),
           ],
         ),
       ),
@@ -239,18 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            onPressed: _incrementCounter,
-            tooltip: 'Increment',
-            child: const Icon(
-              Icons.add,
-            ),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          FloatingActionButton(
-            onPressed: _incrementCounter,
-            // onPressed: _discoverTddTd,
+            onPressed: _triggerConsumption,
             tooltip: 'Discover',
             child: const Icon(
               Icons.explore,
