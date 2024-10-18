@@ -4,6 +4,7 @@ import 'package:dart_wot/core.dart';
 import 'package:ecplise_thingweb_demo_app/pages/graph.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/home.dart';
 import 'pages/settings.dart';
@@ -23,19 +24,23 @@ Future<BasicCredentials?> basicCredentialsCallback(
 }
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   final servient = Servient.create(clientFactories: [
     MqttClientFactory(basicCredentialsCallback: basicCredentialsCallback),
     HttpClientFactory()
   ]);
   final wot = await servient.start();
+  final preferences = await SharedPreferences.getInstance();
 
-  runApp(WotApp(wot));
+  runApp(WotApp(wot, preferences));
 }
 
 class WotApp extends StatelessWidget {
-  const WotApp(this._wot, {super.key});
+  const WotApp(this._wot, this._preferences, {super.key});
 
   final WoT _wot;
+
+  final SharedPreferences _preferences;
 
   // This widget is the root of your application.
   @override
@@ -63,7 +68,7 @@ class WotApp extends StatelessWidget {
           ),
           GoRoute(
             path: "/settings",
-            builder: (context, state) => SettingsPage(),
+            builder: (context, state) => SettingsPage(_preferences),
           ),
           GoRoute(
               path: '/graph',

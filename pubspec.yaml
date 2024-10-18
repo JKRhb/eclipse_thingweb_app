@@ -16,6 +16,8 @@ dependencies:
   dart_wot: ^0.33.0
   flutter_launcher_icons: ^0.14.1
   go_router: ^14.3.0
+  flutter_settings_ui: ^3.0.1
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
