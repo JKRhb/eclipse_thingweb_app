@@ -67,6 +67,7 @@ class WotApp extends StatelessWidget {
             path: '/',
             builder: (context, state) => HomePage(
               _wot,
+              _preferences,
               title: title,
             ),
           ),

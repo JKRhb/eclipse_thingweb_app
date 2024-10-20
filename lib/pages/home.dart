@@ -1,17 +1,22 @@
 import 'package:dart_wot/core.dart';
+import 'package:ecplise_thingweb_demo_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'graph.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage(
-    this._wot, {
+    this._wot,
+    this._preferencesAsync, {
     super.key,
     required this.title,
   });
 
   final WoT _wot;
+
+  final SharedPreferencesAsync _preferencesAsync;
 
   final String title;
 
@@ -22,6 +27,15 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _thingDescriptions = <ThingDescription>[];
 
+  late Future<String?> _discoveryUrl;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,21 +45,40 @@ class _HomePageState extends State<HomePage> {
         // TODO: Fix theme color
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.travel_explore),
-            tooltip: 'Show Snackbar',
-            onPressed: () async {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Discovery process started.')));
+          FutureBuilder(
+            future: _discoveryUrl,
+            builder: (context, snapshot) {
+              const icon = Icon(Icons.travel_explore);
+              const disabledButton = IconButton(onPressed: null, icon: icon);
 
-              final thingDescription =
-                  await widget._wot.requestThingDescription(Uri.parse(
-                "https://gist.githubusercontent.com/JKRhb/a96353072d3e8e7bbf806421ea85e570/raw/e2c3123897f387dff592fa65fb23aa3c5a48177a/voltage-meter.td.json",
-              ));
+              if (snapshot.connectionState == ConnectionState.waiting ||
+                  snapshot.hasError) {
+                return disabledButton;
+              }
 
-              setState(
-                () {
-                  _thingDescriptions.add(thingDescription);
+              return IconButton(
+                icon: icon,
+                tooltip: 'Discover TDs',
+                onPressed: () async {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Discovery process started.')));
+
+                  try {
+                    final discoveryUrl = Uri.parse(snapshot.data!);
+
+                    final thingDescription =
+                        await widget._wot.requestThingDescription(discoveryUrl);
+
+                    print(thingDescription);
+
+                    setState(
+                      () {
+                        _thingDescriptions.add(thingDescription);
+                      },
+                    );
+                  } catch (exception) {
+                    // TODO: Do something here.
+                  }
                 },
               );
             },
