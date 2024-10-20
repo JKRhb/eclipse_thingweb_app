@@ -9,8 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/home.dart';
 import 'pages/settings.dart';
 
+const discoveryMethodSettingsKey = "discovery-method-key";
+const discoveryUrlSettingsKey = "discovery-url-key";
+
 final Map<String, BasicCredentials> basicCredentials = {
-  "urn:test": const BasicCredentials("rw", "readwrite"),
+  "urn:test": const BasicCredentials("test-user", "Swampland-Submerge5-Catsup"),
 };
 
 Future<BasicCredentials?> basicCredentialsCallback(
@@ -30,7 +33,8 @@ Future<void> main() async {
     HttpClientFactory()
   ]);
   final wot = await servient.start();
-  final preferences = await SharedPreferences.getInstance();
+
+  final preferences = SharedPreferencesAsync();
 
   runApp(WotApp(wot, preferences));
 }
@@ -40,7 +44,7 @@ class WotApp extends StatelessWidget {
 
   final WoT _wot;
 
-  final SharedPreferences _preferences;
+  final SharedPreferencesAsync _preferences;
 
   // This widget is the root of your application.
   @override

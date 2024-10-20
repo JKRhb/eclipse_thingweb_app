@@ -98,6 +98,8 @@ class _GraphPageState extends State<GraphPage> {
           (interactionOutput) async {
         print("yeah");
         final value = await interactionOutput.value();
+        print(value);
+        print(value.runtimeType);
 
         if (_subscription != null && value is int) {
           setState(() {

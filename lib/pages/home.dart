@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
 
               final thingDescription =
                   await widget._wot.requestThingDescription(Uri.parse(
-                "https://gist.githubusercontent.com/JKRhb/a96353072d3e8e7bbf806421ea85e570/raw/724e977bb33a311b833512d8bfc9479fc3f93212/voltage-meter.td.json",
+                "https://gist.githubusercontent.com/JKRhb/a96353072d3e8e7bbf806421ea85e570/raw/e2c3123897f387dff592fa65fb23aa3c5a48177a/voltage-meter.td.json",
               ));
 
               setState(
@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
                       "/graph",
                       extra: GraphData(
                         thingDescription,
-                        "voltage",
+                        "status",
                       ),
                     );
                   },
