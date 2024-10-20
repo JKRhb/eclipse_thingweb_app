@@ -80,7 +80,6 @@ class _GraphPageState extends State<GraphPage> {
         _consumedThing = null;
       }
       _running = !_running;
-      print(_running);
     });
 
     if (!_running) {
@@ -96,10 +95,7 @@ class _GraphPageState extends State<GraphPage> {
       final consumedThing = await widget._wot.consume(thingDescription);
       _subscription = await consumedThing.observeProperty(propertyName,
           (interactionOutput) async {
-        print("yeah");
         final value = await interactionOutput.value();
-        print(value);
-        print(value.runtimeType);
 
         if (_subscription != null && value is int) {
           setState(() {
@@ -110,7 +106,6 @@ class _GraphPageState extends State<GraphPage> {
       });
 
       setState(() {
-        print("yo");
         _consumedThing = consumedThing;
       });
     }

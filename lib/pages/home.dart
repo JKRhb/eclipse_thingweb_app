@@ -29,11 +29,23 @@ class _HomePageState extends State<HomePage> {
 
   late Future<String?> _discoveryUrl;
 
+  late Future<String?> _discoveryMethod;
+
+  Future<({String? discoveryUrl, String? discoveryMethod})>
+      get _obtainPreferences async {
+    final result = await Future.wait([_discoveryUrl, _discoveryMethod]);
+
+    return (discoveryUrl: result[0], discoveryMethod: result[1]);
+  }
+
   @override
   void initState() {
     super.initState();
 
     _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
+
+    _discoveryMethod =
+        widget._preferencesAsync.getString(discoveryMethodSettingsKey);
   }
 
   @override
@@ -46,7 +58,7 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
           FutureBuilder(
-            future: _discoveryUrl,
+            future: _obtainPreferences,
             builder: (context, snapshot) {
               const icon = Icon(Icons.travel_explore);
               const disabledButton = IconButton(onPressed: null, icon: icon);
@@ -60,24 +72,57 @@ class _HomePageState extends State<HomePage> {
                 icon: icon,
                 tooltip: 'Discover TDs',
                 onPressed: () async {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Discovery process started.')));
+                  setState(() {
+                    _thingDescriptions.clear();
+                  });
+
+                  final (:discoveryUrl, :discoveryMethod) = snapshot.data!;
 
                   try {
-                    final discoveryUrl = Uri.parse(snapshot.data!);
+                    final parsedDiscoveryUrl = Uri.parse(discoveryUrl!);
 
-                    final thingDescription =
-                        await widget._wot.requestThingDescription(discoveryUrl);
+                    switch (discoveryMethod) {
+                      case "Direct":
+                        final thingDescription = await widget._wot
+                            .requestThingDescription(parsedDiscoveryUrl);
+                        setState(
+                          () {
+                            _thingDescriptions.add(thingDescription);
+                          },
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Discovery process finished.')));
+                          return;
+                        }
 
-                    print(thingDescription);
+                      case "Directory":
+                        final discoveryProcess = await widget._wot
+                            .exploreDirectory(parsedDiscoveryUrl);
 
-                    setState(
-                      () {
-                        _thingDescriptions.add(thingDescription);
-                      },
-                    );
+                        await for (final thingDescription in discoveryProcess) {
+                          setState(
+                            () {
+                              _thingDescriptions.add(thingDescription);
+                            },
+                          );
+                        }
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Discovery process finished.')));
+                        }
+                    }
                   } catch (exception) {
-                    // TODO: Do something here.
+                    if (!context.mounted) {
+                      return;
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Discovery process failed.')));
                   }
                 },
               );
