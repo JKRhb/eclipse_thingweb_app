@@ -27,25 +27,18 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _thingDescriptions = <ThingDescription>[];
 
-  late Future<String?> _discoveryUrl;
-
-  late Future<String?> _discoveryMethod;
-
+  // TODO: Refactor
   Future<({String? discoveryUrl, String? discoveryMethod})>
       get _obtainPreferences async {
-    final result = await Future.wait([_discoveryUrl, _discoveryMethod]);
+    final discoveryUrl =
+        widget._preferencesAsync.getString(discoveryUrlSettingsKey);
+
+    final discoveryMethod =
+        widget._preferencesAsync.getString(discoveryMethodSettingsKey);
+
+    final result = await Future.wait([discoveryUrl, discoveryMethod]);
 
     return (discoveryUrl: result[0], discoveryMethod: result[1]);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
-
-    _discoveryMethod =
-        widget._preferencesAsync.getString(discoveryMethodSettingsKey);
   }
 
   @override
