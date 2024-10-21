@@ -30,6 +30,8 @@ class GraphPage extends StatefulWidget {
 
   final String propertyName;
 
+  Property? get property => _thingDescription.properties?[propertyName];
+
   @override
   State<GraphPage> createState() => _GraphPageState();
 }
@@ -90,14 +92,14 @@ class _GraphPageState extends State<GraphPage> {
       final propertyName = widget.propertyName;
       final thingDescription = widget._thingDescription;
 
-      _graphTitle = thingDescription.properties?[propertyName]?.title;
+      _graphTitle = widget.property?.title;
 
       final consumedThing = await widget._wot.consume(thingDescription);
       _subscription = await consumedThing.observeProperty(propertyName,
           (interactionOutput) async {
         final value = await interactionOutput.value();
 
-        if (_subscription != null && value is int) {
+        if (_subscription != null && value is num) {
           setState(() {
             _data.add((_counter.toDouble(), value.toDouble()));
             _counter++;
@@ -116,6 +118,9 @@ class _GraphPageState extends State<GraphPage> {
     final axisTitle =
         _graphTitle != null ? Text("$_graphTitle over Time") : null;
 
+    print("Minimum: ${widget.property?.minimum?.toDouble()}");
+    print("Maximum: ${widget.property?.maximum?.toDouble()}");
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -130,8 +135,8 @@ class _GraphPageState extends State<GraphPage> {
                   aspectRatio: 2.0,
                   child: LineChart(
                     LineChartData(
-                      minY: 0,
-                      maxY: 100,
+                      minY: widget.property?.minimum?.toDouble(),
+                      maxY: widget.property?.maximum?.toDouble(),
                       clipData: const FlClipData.all(),
                       titlesData: FlTitlesData(
                         bottomTitles: const AxisTitles(

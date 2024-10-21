@@ -46,10 +46,9 @@ class WotApp extends StatelessWidget {
 
   final SharedPreferencesAsync _preferences;
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    const title = "Eclipse Thingweb OCX Demo";
+    const title = "Voltage Monitor";
     const thingwebColor = Color.fromRGBO(51, 184, 164, 0);
 
     return MaterialApp.router(
