@@ -118,12 +118,10 @@ class _GraphPageState extends State<GraphPage> {
     final axisTitle =
         _graphTitle != null ? Text("$_graphTitle over Time") : null;
 
-    print("Minimum: ${widget.property?.minimum?.toDouble()}");
-    print("Maximum: ${widget.property?.maximum?.toDouble()}");
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text(widget._thingDescription.title),
       ),
       body: Center(

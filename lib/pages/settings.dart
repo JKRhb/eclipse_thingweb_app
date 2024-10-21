@@ -44,10 +44,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        foregroundColor: const Color(0xFFFFFFFF),
         title: const Text("Settings"),
-        // TODO: Fix theme color
         backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       body: SettingsList(
         sections: [

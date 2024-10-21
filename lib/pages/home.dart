@@ -52,10 +52,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        foregroundColor: const Color(0xFFFFFFFF),
         title: Text(widget.title),
-        // TODO: Fix theme color
         backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
           FutureBuilder(
             future: _obtainPreferences,

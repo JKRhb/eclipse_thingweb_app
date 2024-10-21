@@ -2,6 +2,7 @@ import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
 import 'package:ecplise_thingweb_demo_app/pages/graph.dart';
+import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,16 +50,22 @@ class WotApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const title = "Voltage Monitor";
-    const thingwebColor = Color.fromRGBO(51, 184, 164, 0);
+
+    const thingwebPrimary = Color(0x00067362);
+    const thingwebSecondary = Color(0x00B84A91);
+
+    final colorScheme = SeedColorScheme.fromSeeds(
+      brightness: Brightness.light,
+      primaryKey: thingwebPrimary,
+      secondaryKey: thingwebSecondary,
+      tones: FlexTones.vivid(Brightness.light),
+    );
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: title,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: thingwebColor,
-        ),
-        useMaterial3: true,
+        colorScheme: colorScheme,
       ),
       routerConfig: GoRouter(
         routes: [
