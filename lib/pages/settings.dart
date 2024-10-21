@@ -22,22 +22,17 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   _SettingsPageState();
 
-  String? _discoveryMethod;
+  late Future<String?> _discoveryMethod;
 
-  String? _discoveryUrl;
-
-  late Future<String?> _discoveryMethodFuture;
-
-  late Future<String?> _discoveryUrlFuture;
+  late Future<String?> _discoveryUrl;
 
   @override
   void initState() {
     super.initState();
 
-    _discoveryMethodFuture =
+    _discoveryMethod =
         widget._preferencesAsync.getString(discoveryMethodSettingsKey);
-    _discoveryUrlFuture =
-        widget._preferencesAsync.getString(discoveryUrlSettingsKey);
+    _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
   }
 
   @override
@@ -55,7 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsTile(
                 title: const Text('Discovery URL'),
                 trailing: FutureBuilder(
-                  future: _discoveryUrlFuture,
+                  future: _discoveryUrl,
                   builder: (
                     context,
                     snapshot,
@@ -67,8 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         return Text('Error: ${snapshot.error}');
                       }
 
-                      final currentDiscoveryUrl =
-                          _discoveryUrl ?? snapshot.data;
+                      final currentDiscoveryUrl = snapshot.data;
 
                       return SizedBox(
                         width: 150,
@@ -83,23 +77,18 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 leading: const Icon(Icons.link),
                 onPressed: (BuildContext context) async {
-                  final result = await _openDialog();
+                  final currentValue = await widget._preferencesAsync
+                      .getString(discoveryUrlSettingsKey);
 
-                  if (result == _discoveryUrl) {
-                    return;
-                  }
-
-                  setState(() {
-                    if (result?.isEmpty ?? true) {
-                      _discoveryUrl = null;
-                      return;
-                    }
-                  });
-                  _discoveryUrl = result;
+                  final result = await _openDialog(currentValue);
 
                   if (result == null) {
                     await widget._preferencesAsync
                         .remove(discoveryUrlSettingsKey);
+
+                    setState(() {
+                      _discoveryUrl = Future(() => null);
+                    });
                     return;
                   }
 
@@ -107,13 +96,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     discoveryUrlSettingsKey,
                     result,
                   );
+
+                  setState(() {
+                    _discoveryUrl = Future(() => result);
+                  });
                 },
               ),
               SettingsTile(
                 title: const Text('Discovery Method'),
                 leading: const Icon(Icons.language),
                 trailing: FutureBuilder(
-                  future: _discoveryMethodFuture,
+                  future: _discoveryMethod,
                   builder: (
                     context,
                     snapshot,
@@ -125,19 +118,18 @@ class _SettingsPageState extends State<SettingsPage> {
                         return Text('Error: ${snapshot.error}');
                       }
 
-                      final currentDiscoveryMethod =
-                          _discoveryMethod ?? snapshot.data;
+                      final currentDiscoveryMethod = snapshot.data;
 
                       return DropdownButton<String>(
                         value: currentDiscoveryMethod,
                         onChanged: (String? newValue) async {
-                          setState(() {
-                            _discoveryMethod = newValue;
-                          });
-
                           if (newValue == null) {
                             await widget._preferencesAsync
                                 .remove(discoveryMethodSettingsKey);
+
+                            setState(() {
+                              _discoveryMethod = Future(() => null);
+                            });
                             return;
                           }
 
@@ -145,6 +137,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             discoveryMethodSettingsKey,
                             newValue,
                           );
+
+                          setState(() {
+                            _discoveryMethod = Future(() => newValue);
+                          });
                         },
                         items: <String>['Direct', 'Directory']
                             .map<DropdownMenuItem<String>>((String value) {
@@ -165,7 +161,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<String?> _openDialog() => showDialog<String>(
+  Future<String?> _openDialog(String? initialValue) => showDialog<String>(
         context: context,
         builder: (context) => Dialog(
           child: SizedBox(
@@ -180,7 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const Spacer(),
                   UrlInputForm(
-                    initialValue: _discoveryUrl,
+                    initialValue: initialValue,
                     submitCallback: (value) {
                       Navigator.of(context).pop(value);
                     },
