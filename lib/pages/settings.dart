@@ -87,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         .remove(discoveryUrlSettingsKey);
 
                     setState(() {
-                      _discoveryUrl = Future(() => null);
+                      _discoveryUrl = Future.value(null);
                     });
                     return;
                   }
@@ -98,7 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
 
                   setState(() {
-                    _discoveryUrl = Future(() => result);
+                    _discoveryUrl = Future.value(result);
                   });
                 },
               ),
@@ -128,7 +128,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 .remove(discoveryMethodSettingsKey);
 
                             setState(() {
-                              _discoveryMethod = Future(() => null);
+                              _discoveryMethod = Future.value(null);
                             });
                             return;
                           }
@@ -139,7 +139,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           );
 
                           setState(() {
-                            _discoveryMethod = Future(() => newValue);
+                            _discoveryMethod = Future.value(newValue);
                           });
                         },
                         items: <String>['Direct', 'Directory']
