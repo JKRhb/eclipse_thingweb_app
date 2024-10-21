@@ -18,6 +18,7 @@ dependencies:
   go_router: ^14.3.0
   flutter_settings_ui: ^3.0.1
   shared_preferences: ^2.3.2
+  flex_seed_scheme: ^3.4.1
 
 dev_dependencies:
   flutter_test:
