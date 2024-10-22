@@ -50,12 +50,13 @@ class _HomePageState extends State<HomePage> {
     behavior: SnackBarBehavior.floating,
   );
 
-  SnackBar _createFailureSnackbar(String errorMessage) => SnackBar(
+  SnackBar _createFailureSnackbar(String errorTitle, String errorMessage) =>
+      SnackBar(
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Discovery failed!",
+            Text(
+              errorTitle,
             ),
             Text(
               errorMessage,
@@ -139,6 +140,7 @@ class _HomePageState extends State<HomePage> {
                     _displaySnackbarMessage(
                         context,
                         _createFailureSnackbar(
+                          "Discovery failed!",
                           exception.toString(),
                         ));
                   }
@@ -172,12 +174,25 @@ class _HomePageState extends State<HomePage> {
                     return;
                   }
 
-                  if (propertyName == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Error: No property name set.'),
-                      ),
+                  if (propertyName == null || propertyName.isEmpty) {
+                    final snackbar = _createFailureSnackbar(
+                      "Cannot start interaction",
+                      "No property name set.",
                     );
+
+                    _displaySnackbarMessage(context, snackbar);
+                    return;
+                  }
+
+                  final properties = thingDescription.properties ?? {};
+
+                  if (!(properties).containsKey(propertyName)) {
+                    final snackbar = _createFailureSnackbar(
+                      "Cannot start interaction",
+                      "Thing Description does not include property name $propertyName.",
+                    );
+
+                    _displaySnackbarMessage(context, snackbar);
                     return;
                   }
 

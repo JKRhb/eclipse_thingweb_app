@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:ecplise_thingweb_demo_app/main.dart';
 import 'package:ecplise_thingweb_demo_app/widgets/input_form.dart';
 import 'package:flutter/material.dart';
