@@ -1,11 +1,8 @@
 import 'package:ecplise_thingweb_demo_app/main.dart';
-import 'package:ecplise_thingweb_demo_app/widgets/url_input_form.dart';
+import 'package:ecplise_thingweb_demo_app/widgets/input_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-const defaultUrl =
-    "https://gist.githubusercontent.com/JKRhb/a96353072d3e8e7bbf806421ea85e570/raw/e2c3123897f387dff592fa65fb23aa3c5a48177a/voltage-meter.td.json";
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage(

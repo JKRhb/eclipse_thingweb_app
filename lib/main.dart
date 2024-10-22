@@ -69,21 +69,22 @@ class WotApp extends StatelessWidget {
             builder: (context, state) => SettingsPage(_preferences),
           ),
           GoRoute(
-              path: '/graph',
-              builder: (context, state) {
-                final data = state.extra;
+            path: '/graph',
+            builder: (context, state) {
+              final data = state.extra;
 
-                if (data is! GraphData) {
-                  throw StateError("Got $data, ${data.runtimeType}");
-                }
+              if (data is! GraphData) {
+                throw StateError("Got $data, ${data.runtimeType}");
+              }
 
-                return GraphPage(
-                  _wot,
-                  data.thingDescription,
-                  data.propertyName,
-                  title: title,
-                );
-              })
+              return GraphPage(
+                _wot,
+                data.thingDescription,
+                data.propertyName,
+                title: title,
+              );
+            },
+          ),
         ],
       ),
     );
