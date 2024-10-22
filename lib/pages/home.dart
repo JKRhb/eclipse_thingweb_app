@@ -77,7 +77,9 @@ class _HomePageState extends State<HomePage> {
       );
 
   void _displaySnackbarMessage(BuildContext context, SnackBar snackbar) =>
-      ScaffoldMessenger.of(context).showSnackBar(snackbar);
+      ScaffoldMessenger.of(context)
+        ..removeCurrentSnackBar()
+        ..showSnackBar(snackbar);
 
   @override
   Widget build(BuildContext context) {
