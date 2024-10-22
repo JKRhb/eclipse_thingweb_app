@@ -27,18 +27,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _thingDescriptions = <ThingDescription>[];
 
-  // TODO: Refactor
   Future<({String? discoveryUrl, String? discoveryMethod})>
-      get _obtainPreferences async {
-    final discoveryUrl =
-        widget._preferencesAsync.getString(discoveryUrlSettingsKey);
+      get _obtainDiscoveryPreferences async {
+    final preferences = widget._preferencesAsync;
 
-    final discoveryMethod =
-        widget._preferencesAsync.getString(discoveryMethodSettingsKey);
-
-    final result = await Future.wait([discoveryUrl, discoveryMethod]);
-
-    return (discoveryUrl: result[0], discoveryMethod: result[1]);
+    return (
+      discoveryUrl: await preferences.getString(discoveryUrlSettingsKey),
+      discoveryMethod: await preferences.getString(discoveryMethodSettingsKey),
+    );
   }
 
   void _registerThingDescription(ThingDescription thingDescription) {
@@ -90,7 +86,7 @@ class _HomePageState extends State<HomePage> {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
           FutureBuilder(
-            future: _obtainPreferences,
+            future: _obtainDiscoveryPreferences,
             builder: (context, snapshot) {
               const icon = Icon(Icons.travel_explore);
               const disabledButton = IconButton(onPressed: null, icon: icon);
