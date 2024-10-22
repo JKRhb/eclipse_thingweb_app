@@ -26,6 +26,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   late Future<String?> _discoveryUrl;
 
+  late Future<String?> _propertyName;
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +35,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _discoveryMethod =
         widget._preferencesAsync.getString(discoveryMethodSettingsKey);
     _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
+    _propertyName = widget._preferencesAsync.getString(propertyNameSettingsKey);
   }
 
   @override
@@ -80,7 +83,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   final currentValue = await widget._preferencesAsync
                       .getString(discoveryUrlSettingsKey);
 
-                  final result = await _openDialog(currentValue);
+                  final result = await _openDialog(
+                    currentValue,
+                    validator: (value) {
+                      final parsedUrl = Uri.tryParse(value ?? "");
+
+                      if (parsedUrl == null) {
+                        return "Please enter a valid URL";
+                      }
+
+                      return null;
+                    },
+                  );
 
                   if (result == null) {
                     await widget._preferencesAsync
@@ -153,7 +167,62 @@ class _SettingsPageState extends State<SettingsPage> {
                     }
                   },
                 ),
-              )
+              ),
+              SettingsTile(
+                title: const Text('Property Name'),
+                leading: const Icon(Icons.featured_play_list),
+                trailing: FutureBuilder(
+                  future: _propertyName,
+                  builder: (
+                    context,
+                    snapshot,
+                  ) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else {
+                      if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      }
+
+                      final currentPropertyName = snapshot.data;
+
+                      return SizedBox(
+                        width: 150,
+                        child: Text(
+                          currentPropertyName ?? "Unset",
+                          softWrap: true,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                onPressed: (BuildContext context) async {
+                  final currentValue = await widget._preferencesAsync
+                      .getString(propertyNameSettingsKey);
+
+                  final result = await _openDialog(currentValue);
+
+                  if (result == null) {
+                    await widget._preferencesAsync
+                        .remove(propertyNameSettingsKey);
+
+                    setState(() {
+                      _propertyName = Future.value(null);
+                    });
+                    return;
+                  }
+
+                  await widget._preferencesAsync.setString(
+                    propertyNameSettingsKey,
+                    result,
+                  );
+
+                  setState(() {
+                    _propertyName = Future.value(result);
+                  });
+                },
+              ),
             ],
           ),
         ],
@@ -161,7 +230,11 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<String?> _openDialog(String? initialValue) => showDialog<String>(
+  Future<String?> _openDialog(
+    String? initialValue, {
+    String? Function(String?)? validator,
+  }) =>
+      showDialog<String>(
         context: context,
         builder: (context) => Dialog(
           child: SizedBox(
@@ -175,7 +248,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(fontSize: 20),
                   ),
                   const Spacer(),
-                  UrlInputForm(
+                  InputForm(
                     initialValue: initialValue,
                     submitCallback: (value) {
                       Navigator.of(context).pop(value);
@@ -183,6 +256,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     cancelCallback: (value) {
                       Navigator.of(context).pop(value);
                     },
+                    validator: validator,
                   ),
                 ],
               ),

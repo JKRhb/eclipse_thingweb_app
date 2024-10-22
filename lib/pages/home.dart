@@ -132,12 +132,25 @@ class _HomePageState extends State<HomePage> {
         children: _thingDescriptions
             .map((thingDescription) => ListTile(
                   title: Text(thingDescription.title),
-                  onTap: () {
+                  onTap: () async {
+                    final propertyName = await widget._preferencesAsync
+                        .getString(propertyNameSettingsKey);
+
+                    if (!context.mounted) {
+                      return;
+                    }
+
+                    if (propertyName == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Error: No property name set.')));
+                      return;
+                    }
+
                     context.push(
                       "/graph",
                       extra: GraphData(
                         thingDescription,
-                        "status",
+                        propertyName,
                       ),
                     );
                   },

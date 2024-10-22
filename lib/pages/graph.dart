@@ -128,43 +128,42 @@ class _GraphPageState extends State<GraphPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            if (_data.isNotEmpty)
-              AspectRatio(
-                  aspectRatio: 2.0,
-                  child: LineChart(
-                    LineChartData(
-                      minY: widget.property?.minimum?.toDouble(),
-                      maxY: widget.property?.maximum?.toDouble(),
-                      clipData: const FlClipData.all(),
-                      titlesData: FlTitlesData(
-                        bottomTitles: const AxisTitles(
-                          axisNameWidget: Text(''),
-                          axisNameSize: 24,
-                          sideTitles: SideTitles(
-                            showTitles: false,
-                            reservedSize: 0,
-                          ),
-                        ),
-                        topTitles: AxisTitles(
-                          axisNameWidget: axisTitle,
-                          axisNameSize: 24,
-                          sideTitles: const SideTitles(
-                            showTitles: false,
-                            reservedSize: 0,
-                          ),
+            AspectRatio(
+                aspectRatio: 2.0,
+                child: LineChart(
+                  LineChartData(
+                    minY: widget.property?.minimum?.toDouble(),
+                    maxY: widget.property?.maximum?.toDouble(),
+                    clipData: const FlClipData.all(),
+                    titlesData: FlTitlesData(
+                      bottomTitles: const AxisTitles(
+                        axisNameWidget: Text(''),
+                        axisNameSize: 24,
+                        sideTitles: SideTitles(
+                          showTitles: false,
+                          reservedSize: 0,
                         ),
                       ),
-                      lineBarsData: [
-                        LineChartBarData(
-                            show: true,
-                            isCurved: true,
-                            spots: _dataWindow
-                                .map((e) => FlSpot(e.$1, e.$2))
-                                .toList())
-                      ],
+                      topTitles: AxisTitles(
+                        axisNameWidget: axisTitle,
+                        axisNameSize: 24,
+                        sideTitles: const SideTitles(
+                          showTitles: false,
+                          reservedSize: 0,
+                        ),
+                      ),
                     ),
-                    duration: Duration.zero,
-                  )),
+                    lineBarsData: [
+                      LineChartBarData(
+                          show: true,
+                          isCurved: true,
+                          spots: _dataWindow
+                              .map((e) => FlSpot(e.$1, e.$2))
+                              .toList())
+                    ],
+                  ),
+                  duration: Duration.zero,
+                )),
           ],
         ),
       ),

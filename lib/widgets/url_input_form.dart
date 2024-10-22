@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-class UrlInputForm extends StatefulWidget {
-  const UrlInputForm({
+class InputForm extends StatefulWidget {
+  const InputForm({
     required this.initialValue,
     required this.submitCallback,
     required this.cancelCallback,
+    this.validator,
     super.key,
   });
 
@@ -14,13 +15,15 @@ class UrlInputForm extends StatefulWidget {
 
   final String? initialValue;
 
+  final String? Function(String?)? validator;
+
   @override
-  UrlInputFormState createState() {
-    return UrlInputFormState();
+  InputFormState createState() {
+    return InputFormState();
   }
 }
 
-class UrlInputFormState extends State<UrlInputForm> {
+class InputFormState extends State<InputForm> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _discoveryUrlController;
@@ -47,15 +50,7 @@ class UrlInputFormState extends State<UrlInputForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextFormField(
-            validator: (value) {
-              final parsedUrl = Uri.tryParse(value ?? "");
-
-              if (parsedUrl == null) {
-                return "Please enter a valid URL";
-              }
-
-              return null;
-            },
+            validator: widget.validator,
             controller: _discoveryUrlController,
           ),
           Padding(

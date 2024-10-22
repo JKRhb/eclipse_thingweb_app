@@ -12,26 +12,13 @@ import 'pages/settings.dart';
 
 const discoveryMethodSettingsKey = "discovery-method-key";
 const discoveryUrlSettingsKey = "discovery-url-key";
-
-final Map<String, BasicCredentials> basicCredentials = {
-  "urn:test": const BasicCredentials("test-user", "Swampland-Submerge5-Catsup"),
-};
-
-Future<BasicCredentials?> basicCredentialsCallback(
-  Uri uri,
-  AugmentedForm? form, [
-  BasicCredentials? invalidCredentials,
-]) async {
-  final id = form?.tdIdentifier;
-
-  return basicCredentials[id];
-}
+const propertyNameSettingsKey = "property-name-key";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final servient = Servient.create(clientFactories: [
-    MqttClientFactory(basicCredentialsCallback: basicCredentialsCallback),
-    HttpClientFactory()
+    MqttClientFactory(),
+    HttpClientFactory(),
   ]);
   final wot = await servient.start();
 
