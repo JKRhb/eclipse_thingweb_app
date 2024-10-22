@@ -171,7 +171,7 @@ class _GraphPageState extends State<GraphPage> {
         children: [
           FloatingActionButton(
             onPressed: _triggerConsumption,
-            tooltip: 'Start',
+            tooltip: !_running ? 'Start' : "Stop",
             child: Icon(
               !_running ? Icons.play_arrow : Icons.stop,
             ),
