@@ -211,7 +211,7 @@ class _HomePageState extends State<HomePage> {
                 child: ListTile(
                   title: Text(thingDescription.title),
                   subtitle: description != null ? Text(description) : null,
-                  leading: const Icon(Icons.devices),
+                  leading: const Icon(Icons.electric_bolt),
                   onTap: () async {
                     final propertyName = await widget._preferencesAsync
                         .getString(propertyNameSettingsKey);
