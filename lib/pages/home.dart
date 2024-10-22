@@ -154,6 +154,17 @@ class _HomePageState extends State<HomePage> {
           exception.message,
         ),
       );
+    } on FormatException catch (exception) {
+      if (!context.mounted) {
+        return;
+      }
+      _displaySnackbarMessage(
+        context,
+        _createFailureSnackbar(
+          "Failed to decode discovery result!",
+          exception.message,
+        ),
+      );
     }
   }
 
