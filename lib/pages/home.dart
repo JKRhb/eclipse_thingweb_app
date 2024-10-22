@@ -38,7 +38,9 @@ class _HomePageState extends State<HomePage> {
 
     return (
       discoveryUrl: await preferences.getString(discoveryUrlSettingsKey),
-      discoveryMethod: await preferences.getString(discoveryMethodSettingsKey),
+      discoveryMethod:
+          (await preferences.getString(discoveryMethodSettingsKey) ??
+              defaultDiscoveryMethod),
       propertyName: await preferences.getString(propertyNameSettingsKey),
     );
   }

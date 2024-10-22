@@ -14,6 +14,8 @@ const discoveryMethodSettingsKey = "discovery-method-key";
 const discoveryUrlSettingsKey = "discovery-url-key";
 const propertyNameSettingsKey = "property-name-key";
 
+const defaultDiscoveryMethod = "Direct";
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final servient = Servient.create(clientFactories: [

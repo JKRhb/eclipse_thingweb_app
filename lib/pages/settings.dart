@@ -150,7 +150,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 .remove(discoveryMethodSettingsKey);
 
                             setState(() {
-                              _discoveryMethod = Future.value(null);
+                              _discoveryMethod =
+                                  Future.value(defaultDiscoveryMethod);
                             });
                             return;
                           }
