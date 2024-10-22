@@ -41,6 +41,44 @@ class _HomePageState extends State<HomePage> {
     return (discoveryUrl: result[0], discoveryMethod: result[1]);
   }
 
+  void _registerThingDescription(ThingDescription thingDescription) {
+    setState(() {
+      _thingDescriptions.add(thingDescription);
+    });
+  }
+
+  static const _successSnackBar = SnackBar(
+    content: Text(
+      "Discovery process finished.",
+    ),
+    behavior: SnackBarBehavior.floating,
+  );
+
+  SnackBar _createFailureSnackbar(String errorMessage) => SnackBar(
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Discovery failed!",
+            ),
+            Text(
+              errorMessage,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            )
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red,
+      );
+
+  void _displaySnackbarMessage(BuildContext context, SnackBar snackbar) =>
+      ScaffoldMessenger.of(context).showSnackBar(snackbar);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,16 +115,10 @@ class _HomePageState extends State<HomePage> {
                       case "Direct":
                         final thingDescription = await widget._wot
                             .requestThingDescription(parsedDiscoveryUrl);
-                        setState(
-                          () {
-                            _thingDescriptions.add(thingDescription);
-                          },
-                        );
+                        _registerThingDescription(thingDescription);
+
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('Discovery process finished.')));
+                          _displaySnackbarMessage(context, _successSnackBar);
                           return;
                         }
 
@@ -95,26 +127,22 @@ class _HomePageState extends State<HomePage> {
                             .exploreDirectory(parsedDiscoveryUrl);
 
                         await for (final thingDescription in discoveryProcess) {
-                          setState(
-                            () {
-                              _thingDescriptions.add(thingDescription);
-                            },
-                          );
+                          _registerThingDescription(thingDescription);
                         }
 
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('Discovery process finished.')));
+                          _displaySnackbarMessage(context, _successSnackBar);
                         }
                     }
-                  } catch (exception) {
+                  } on Exception catch (exception) {
                     if (!context.mounted) {
                       return;
                     }
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('Discovery process failed.')));
+                    _displaySnackbarMessage(
+                        context,
+                        _createFailureSnackbar(
+                          exception.toString(),
+                        ));
                   }
                 },
               );
@@ -137,6 +165,7 @@ class _HomePageState extends State<HomePage> {
               child: ListTile(
                 title: Text(thingDescription.title),
                 subtitle: description != null ? Text(description) : null,
+                leading: const Icon(Icons.devices),
                 onTap: () async {
                   final propertyName = await widget._preferencesAsync
                       .getString(propertyNameSettingsKey);
