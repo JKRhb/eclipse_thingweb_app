@@ -164,7 +164,8 @@ class _HomePageState extends State<HomePage> {
         future: _discoveryPreferences,
         builder: (context, snapshot) {
           const icon = Icon(Icons.travel_explore);
-          const disabledButton = IconButton(onPressed: null, icon: icon);
+          const disabledButton =
+              FloatingActionButton(onPressed: null, child: icon);
 
           if (snapshot.connectionState == ConnectionState.waiting ||
               snapshot.hasError) {
