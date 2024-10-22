@@ -4,7 +4,6 @@ import 'package:fl_chart/fl_chart.dart';
 
 import "dart:math";
 
-// TODO: Use a record for this instead
 class GraphData {
   GraphData(this.thingDescription, this.propertyName);
 
@@ -55,7 +54,7 @@ class _GraphPageState extends State<GraphPage> {
     return result;
   }
 
-  String? _graphTitle;
+  String? get _graphTitle => widget.property?.title;
 
   final int _maxElements = 50;
 
@@ -92,8 +91,6 @@ class _GraphPageState extends State<GraphPage> {
       final propertyName = widget.propertyName;
       final thingDescription = widget._thingDescription;
 
-      _graphTitle = widget.property?.title;
-
       final consumedThing = await widget._wot.consume(thingDescription);
       _subscription = await consumedThing.observeProperty(propertyName,
           (interactionOutput) async {
@@ -125,46 +122,48 @@ class _GraphPageState extends State<GraphPage> {
         title: Text(widget._thingDescription.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            AspectRatio(
-                aspectRatio: 2.0,
-                child: LineChart(
-                  LineChartData(
-                    minY: widget.property?.minimum?.toDouble(),
-                    maxY: widget.property?.maximum?.toDouble(),
-                    clipData: const FlClipData.all(),
-                    titlesData: FlTitlesData(
-                      bottomTitles: const AxisTitles(
-                        axisNameWidget: Text(''),
-                        axisNameSize: 24,
-                        sideTitles: SideTitles(
-                          showTitles: false,
-                          reservedSize: 0,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              AspectRatio(
+                  aspectRatio: 2.0,
+                  child: LineChart(
+                    LineChartData(
+                      minY: widget.property?.minimum?.toDouble(),
+                      maxY: widget.property?.maximum?.toDouble(),
+                      clipData: const FlClipData.all(),
+                      titlesData: FlTitlesData(
+                        bottomTitles: const AxisTitles(
+                          axisNameWidget: Text(''),
+                          axisNameSize: 24,
+                          sideTitles: SideTitles(
+                            showTitles: false,
+                            reservedSize: 0,
+                          ),
+                        ),
+                        topTitles: AxisTitles(
+                          axisNameWidget: axisTitle,
+                          axisNameSize: 24,
+                          sideTitles: const SideTitles(
+                            showTitles: false,
+                            reservedSize: 0,
+                          ),
                         ),
                       ),
-                      topTitles: AxisTitles(
-                        axisNameWidget: axisTitle,
-                        axisNameSize: 24,
-                        sideTitles: const SideTitles(
-                          showTitles: false,
-                          reservedSize: 0,
-                        ),
-                      ),
+                      lineBarsData: [
+                        LineChartBarData(
+                            show: true,
+                            isCurved: true,
+                            spots: _dataWindow
+                                .map((e) => FlSpot(e.$1, e.$2))
+                                .toList())
+                      ],
                     ),
-                    lineBarsData: [
-                      LineChartBarData(
-                          show: true,
-                          isCurved: true,
-                          spots: _dataWindow
-                              .map((e) => FlSpot(e.$1, e.$2))
-                              .toList())
-                    ],
-                  ),
-                  duration: Duration.zero,
-                )),
-          ],
+                    duration: Duration.zero,
+                  )),
+            ],
+          ),
         ),
       ),
       floatingActionButton: Column(

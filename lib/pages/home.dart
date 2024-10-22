@@ -181,6 +181,8 @@ class _HomePageState extends State<HomePage> {
                     return;
                   }
 
+                  ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
                   context.push(
                     "/graph",
                     extra: GraphData(

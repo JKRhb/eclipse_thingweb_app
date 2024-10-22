@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:ecplise_thingweb_demo_app/main.dart';
 import 'package:ecplise_thingweb_demo_app/widgets/input_form.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +37,20 @@ class _SettingsPageState extends State<SettingsPage> {
     _propertyName = widget._preferencesAsync.getString(propertyNameSettingsKey);
   }
 
+  static String _formatDiscoveryUrl(String? discoveryUrl) {
+    const maxUrlLength = 20;
+
+    if (discoveryUrl == null) {
+      return "Unset";
+    }
+
+    if (discoveryUrl.length > maxUrlLength) {
+      return "${discoveryUrl.substring(0, maxUrlLength)}...";
+    }
+
+    return discoveryUrl;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,15 +79,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       }
 
                       final currentDiscoveryUrl = snapshot.data;
+                      final formattedDiscoveryUrl =
+                          _formatDiscoveryUrl(currentDiscoveryUrl);
 
-                      return SizedBox(
-                        width: 150,
-                        child: Text(
-                          currentDiscoveryUrl ?? "Unset",
-                          softWrap: true,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
+                      return Text(formattedDiscoveryUrl);
                     }
                   },
                 ),
@@ -81,6 +92,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       .getString(discoveryUrlSettingsKey);
 
                   final result = await _openDialog(
+                    "Enter a Discovery URL",
                     currentValue,
                     validator: (value) {
                       final parsedUrl = Uri.tryParse(value ?? "");
@@ -132,6 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       final currentDiscoveryMethod = snapshot.data;
 
                       return DropdownButton<String>(
+                        style: Theme.of(context).textTheme.bodyMedium,
                         value: currentDiscoveryMethod,
                         onChanged: (String? newValue) async {
                           if (newValue == null) {
@@ -183,13 +196,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
                       final currentPropertyName = snapshot.data;
 
-                      return SizedBox(
-                        width: 150,
-                        child: Text(
-                          currentPropertyName ?? "Unset",
-                          softWrap: true,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      return Text(
+                        currentPropertyName ?? "Unset",
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
                       );
                     }
                   },
@@ -198,7 +208,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   final currentValue = await widget._preferencesAsync
                       .getString(propertyNameSettingsKey);
 
-                  final result = await _openDialog(currentValue);
+                  final result = await _openDialog(
+                    "Enter a Property Name",
+                    currentValue,
+                  );
 
                   if (result == null) {
                     await widget._preferencesAsync
@@ -228,6 +241,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<String?> _openDialog(
+    String dialogTitle,
     String? initialValue, {
     String? Function(String?)? validator,
   }) =>
@@ -237,12 +251,12 @@ class _SettingsPageState extends State<SettingsPage> {
           child: SizedBox(
             height: 200,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text(
-                    "Enter a URL",
-                    style: TextStyle(fontSize: 20),
+                  Text(
+                    dialogTitle,
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const Spacer(),
                   InputForm(
