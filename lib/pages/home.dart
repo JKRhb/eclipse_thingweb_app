@@ -24,20 +24,33 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+typedef _DiscoveryPreferences = ({
+  String? discoveryUrl,
+  String? discoveryMethod,
+  String? propertyName
+});
+
 class _HomePageState extends State<HomePage> {
   final _thingDescriptions = <ThingDescription>[];
 
-  Future<({String? discoveryUrl, String? discoveryMethod})>
-      get _obtainDiscoveryPreferences async {
+  Future<_DiscoveryPreferences> get _discoveryPreferences async {
     final preferences = widget._preferencesAsync;
 
     return (
       discoveryUrl: await preferences.getString(discoveryUrlSettingsKey),
       discoveryMethod: await preferences.getString(discoveryMethodSettingsKey),
+      propertyName: await preferences.getString(propertyNameSettingsKey),
     );
   }
 
-  void _registerThingDescription(ThingDescription thingDescription) {
+  void _registerThingDescription(
+      ThingDescription thingDescription, propertyName) {
+    final properties = thingDescription.properties ?? {};
+
+    if (!properties.containsKey(propertyName)) {
+      return;
+    }
+
     setState(() {
       _thingDescriptions.add(thingDescription);
     });
@@ -78,76 +91,98 @@ class _HomePageState extends State<HomePage> {
         ..removeCurrentSnackBar()
         ..showSnackBar(snackbar);
 
+  void _startDiscovery(
+      BuildContext context, _DiscoveryPreferences discoveryPreferences) async {
+    setState(() {
+      _thingDescriptions.clear();
+    });
+
+    final (:discoveryUrl, :discoveryMethod, :propertyName) =
+        discoveryPreferences;
+
+    try {
+      if (propertyName == null) {
+        throw const DiscoveryException(
+          "A property name to filter TDs must be set in the preferences.",
+        );
+      }
+
+      final parsedDiscoveryUrl = Uri.parse(discoveryUrl!);
+
+      switch (discoveryMethod) {
+        case "Direct":
+          final thingDescription =
+              await widget._wot.requestThingDescription(parsedDiscoveryUrl);
+          _registerThingDescription(
+            thingDescription,
+            propertyName,
+          );
+
+          if (context.mounted) {
+            _displaySnackbarMessage(context, _successSnackBar);
+          }
+
+        case "Directory":
+          final discoveryProcess =
+              await widget._wot.exploreDirectory(parsedDiscoveryUrl);
+
+          await for (final thingDescription in discoveryProcess) {
+            _registerThingDescription(
+              thingDescription,
+              propertyName,
+            );
+          }
+
+          if (context.mounted) {
+            _displaySnackbarMessage(context, _successSnackBar);
+          }
+      }
+
+      if (_thingDescriptions.isEmpty) {
+        throw DiscoveryException(
+          "Did not discovery any TDs with property name $propertyName",
+        );
+      }
+    } on DiscoveryException catch (exception) {
+      if (!context.mounted) {
+        return;
+      }
+      _displaySnackbarMessage(
+        context,
+        _createFailureSnackbar(
+          "Discovery failed!",
+          exception.message,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FutureBuilder(
+        future: _discoveryPreferences,
+        builder: (context, snapshot) {
+          const icon = Icon(Icons.travel_explore);
+          const disabledButton = IconButton(onPressed: null, icon: icon);
+
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              snapshot.hasError) {
+            return disabledButton;
+          }
+
+          return FloatingActionButton(
+            tooltip: 'Discover TDs',
+            onPressed: () => _startDiscovery(context, snapshot.data!),
+            child: icon,
+          );
+        },
+      ),
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
-          FutureBuilder(
-            future: _obtainDiscoveryPreferences,
-            builder: (context, snapshot) {
-              const icon = Icon(Icons.travel_explore);
-              const disabledButton = IconButton(onPressed: null, icon: icon);
-
-              if (snapshot.connectionState == ConnectionState.waiting ||
-                  snapshot.hasError) {
-                return disabledButton;
-              }
-
-              return IconButton(
-                icon: icon,
-                tooltip: 'Discover TDs',
-                onPressed: () async {
-                  setState(() {
-                    _thingDescriptions.clear();
-                  });
-
-                  final (:discoveryUrl, :discoveryMethod) = snapshot.data!;
-
-                  try {
-                    final parsedDiscoveryUrl = Uri.parse(discoveryUrl!);
-
-                    switch (discoveryMethod) {
-                      case "Direct":
-                        final thingDescription = await widget._wot
-                            .requestThingDescription(parsedDiscoveryUrl);
-                        _registerThingDescription(thingDescription);
-
-                        if (context.mounted) {
-                          _displaySnackbarMessage(context, _successSnackBar);
-                          return;
-                        }
-
-                      case "Directory":
-                        final discoveryProcess = await widget._wot
-                            .exploreDirectory(parsedDiscoveryUrl);
-
-                        await for (final thingDescription in discoveryProcess) {
-                          _registerThingDescription(thingDescription);
-                        }
-
-                        if (context.mounted) {
-                          _displaySnackbarMessage(context, _successSnackBar);
-                        }
-                    }
-                  } on Exception catch (exception) {
-                    if (!context.mounted) {
-                      return;
-                    }
-                    _displaySnackbarMessage(
-                        context,
-                        _createFailureSnackbar(
-                          "Discovery failed!",
-                          exception.toString(),
-                        ));
-                  }
-                },
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => {
@@ -156,60 +191,71 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-      body: ListView(
-        children: _thingDescriptions.map(
-          (thingDescription) {
-            final description = thingDescription.description;
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final discoveryPreferences = await _discoveryPreferences;
 
-            return Card(
-              child: ListTile(
-                title: Text(thingDescription.title),
-                subtitle: description != null ? Text(description) : null,
-                leading: const Icon(Icons.devices),
-                onTap: () async {
-                  final propertyName = await widget._preferencesAsync
-                      .getString(propertyNameSettingsKey);
+          if (!context.mounted) {
+            return;
+          }
 
-                  if (!context.mounted) {
-                    return;
-                  }
+          _startDiscovery(context, discoveryPreferences);
+        },
+        child: ListView(
+          children: _thingDescriptions.map(
+            (thingDescription) {
+              final description = thingDescription.description;
 
-                  if (propertyName == null || propertyName.isEmpty) {
-                    final snackbar = _createFailureSnackbar(
-                      "Cannot start interaction",
-                      "No property name set.",
+              return Card(
+                child: ListTile(
+                  title: Text(thingDescription.title),
+                  subtitle: description != null ? Text(description) : null,
+                  leading: const Icon(Icons.devices),
+                  onTap: () async {
+                    final propertyName = await widget._preferencesAsync
+                        .getString(propertyNameSettingsKey);
+
+                    if (!context.mounted) {
+                      return;
+                    }
+
+                    if (propertyName == null || propertyName.isEmpty) {
+                      final snackbar = _createFailureSnackbar(
+                        "Cannot start interaction",
+                        "No property name set.",
+                      );
+
+                      _displaySnackbarMessage(context, snackbar);
+                      return;
+                    }
+
+                    final properties = thingDescription.properties ?? {};
+
+                    if (!(properties).containsKey(propertyName)) {
+                      final snackbar = _createFailureSnackbar(
+                        "Cannot start interaction",
+                        "Thing Description does not include property name $propertyName.",
+                      );
+
+                      _displaySnackbarMessage(context, snackbar);
+                      return;
+                    }
+
+                    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+                    context.push(
+                      "/graph",
+                      extra: GraphData(
+                        thingDescription,
+                        propertyName,
+                      ),
                     );
-
-                    _displaySnackbarMessage(context, snackbar);
-                    return;
-                  }
-
-                  final properties = thingDescription.properties ?? {};
-
-                  if (!(properties).containsKey(propertyName)) {
-                    final snackbar = _createFailureSnackbar(
-                      "Cannot start interaction",
-                      "Thing Description does not include property name $propertyName.",
-                    );
-
-                    _displaySnackbarMessage(context, snackbar);
-                    return;
-                  }
-
-                  ScaffoldMessenger.of(context).removeCurrentSnackBar();
-
-                  context.push(
-                    "/graph",
-                    extra: GraphData(
-                      thingDescription,
-                      propertyName,
-                    ),
-                  );
-                },
-              ),
-            );
-          },
-        ).toList(),
+                  },
+                ),
+              );
+            },
+          ).toList(),
+        ),
       ),
     );
   }
