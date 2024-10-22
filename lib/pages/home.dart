@@ -128,34 +128,44 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-      body: Column(
-        children: _thingDescriptions
-            .map((thingDescription) => ListTile(
-                  title: Text(thingDescription.title),
-                  onTap: () async {
-                    final propertyName = await widget._preferencesAsync
-                        .getString(propertyNameSettingsKey);
+      body: ListView(
+        children: _thingDescriptions.map(
+          (thingDescription) {
+            final description = thingDescription.description;
 
-                    if (!context.mounted) {
-                      return;
-                    }
+            return Card(
+              child: ListTile(
+                title: Text(thingDescription.title),
+                subtitle: description != null ? Text(description) : null,
+                onTap: () async {
+                  final propertyName = await widget._preferencesAsync
+                      .getString(propertyNameSettingsKey);
 
-                    if (propertyName == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Error: No property name set.')));
-                      return;
-                    }
+                  if (!context.mounted) {
+                    return;
+                  }
 
-                    context.push(
-                      "/graph",
-                      extra: GraphData(
-                        thingDescription,
-                        propertyName,
+                  if (propertyName == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Error: No property name set.'),
                       ),
                     );
-                  },
-                ))
-            .toList(),
+                    return;
+                  }
+
+                  context.push(
+                    "/graph",
+                    extra: GraphData(
+                      thingDescription,
+                      propertyName,
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ).toList(),
       ),
     );
   }
