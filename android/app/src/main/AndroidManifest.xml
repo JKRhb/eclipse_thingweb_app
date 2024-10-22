@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="ecplise_thingweb_demo_app"
+        android:label="eclipse_thingweb_demo_app"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

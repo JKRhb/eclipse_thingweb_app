@@ -1,4 +1,4 @@
-package com.example.ecplise_thingweb_demo_app
+package com.example.eclipse_thingweb_demo_app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,5 +1,5 @@
 import 'package:dart_wot/core.dart';
-import 'package:ecplise_thingweb_demo_app/main.dart';
+import 'package:eclipse_thingweb_demo_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
