@@ -144,6 +144,10 @@ class _HomePageState extends State<HomePage> {
           if (context.mounted) {
             _displaySnackbarMessage(context, _successSnackBar);
           }
+        default:
+          throw DiscoveryException(
+            "Unknown or unsupported discovery method $discoveryMethod set.",
+          );
       }
 
       if (_thingDescriptions.isEmpty) {
