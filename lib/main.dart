@@ -17,12 +17,11 @@ const propertyNameSettingsKey = "property-name-key";
 const defaultDiscoveryMethod = "Direct";
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   final servient = Servient.create(clientFactories: [
     MqttClientFactory(),
     HttpClientFactory(),
   ]);
-  final wot = await servient.start();
+  final wot = servient.startClientFactories();
 
   final preferences = SharedPreferencesAsync();
 

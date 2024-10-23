@@ -109,7 +109,13 @@ class _HomePageState extends State<HomePage> {
         );
       }
 
-      final parsedDiscoveryUrl = Uri.parse(discoveryUrl!);
+      if (discoveryUrl == null) {
+        throw const DiscoveryException(
+          "A discovery URL must be set in the preferences.",
+        );
+      }
+
+      final parsedDiscoveryUrl = Uri.parse(discoveryUrl);
 
       switch (discoveryMethod) {
         case "Direct":
