@@ -64,16 +64,28 @@ class _PropertyState extends State<PropertyWidget> {
   }
 
   Future<void> _readValue() async {
-    final output = await consumedThing.readProperty(_propertyKey);
-    final value = await output.value();
+    try {
+      final output = await consumedThing.readProperty(_propertyKey);
+      final value = await output.value();
 
-    if (value is num) {
-      _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
+      if (value is num) {
+        _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
+      }
+
+      setState(() {
+        _lastValue = value;
+      });
+    } on Exception catch (exception) {
+      if (!mounted) {
+        return;
+      }
+
+      displayErrorMessageSnackbar(
+        context,
+        "Reading value failed",
+        exception.toString(),
+      );
     }
-
-    setState(() {
-      _lastValue = value;
-    });
   }
 
   Future<void> _toggleObserve() async {

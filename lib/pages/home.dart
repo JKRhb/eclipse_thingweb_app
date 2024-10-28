@@ -6,6 +6,7 @@
 
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/main.dart';
+import 'package:eclipse_thingweb_app/util/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,41 +54,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  static const _successSnackBar = SnackBar(
-    content: Text(
-      "Discovery process finished.",
-    ),
-    behavior: SnackBarBehavior.floating,
-  );
-
-  SnackBar _createFailureSnackbar(String errorTitle, String errorMessage) =>
-      SnackBar(
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              errorTitle,
-            ),
-            Text(
-              errorMessage,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            )
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.red,
-      );
-
-  void _displaySnackbarMessage(BuildContext context, SnackBar snackbar) =>
-      ScaffoldMessenger.of(context)
-        ..removeCurrentSnackBar()
-        ..showSnackBar(snackbar);
-
   void _startDiscovery(
       BuildContext context, _DiscoveryPreferences discoveryPreferences) async {
     setState(() {
@@ -111,10 +77,6 @@ class _HomePageState extends State<HomePage> {
               await widget._wot.requestThingDescription(parsedDiscoveryUrl);
           _registerThingDescription(thingDescription);
 
-          if (context.mounted) {
-            _displaySnackbarMessage(context, _successSnackBar);
-          }
-
         case "Directory":
           final discoveryProcess =
               await widget._wot.exploreDirectory(parsedDiscoveryUrl);
@@ -123,9 +85,6 @@ class _HomePageState extends State<HomePage> {
             _registerThingDescription(thingDescription);
           }
 
-          if (context.mounted) {
-            _displaySnackbarMessage(context, _successSnackBar);
-          }
         default:
           throw DiscoveryException(
             "Unknown or unsupported discovery method $discoveryMethod set.",
@@ -137,27 +96,27 @@ class _HomePageState extends State<HomePage> {
           "No TDs have been discovered.",
         );
       }
+
+      if (context.mounted) {
+        displaySuccessMessageSnackbar(context, "Discovery process finished.");
+      }
     } on DiscoveryException catch (exception) {
       if (!context.mounted) {
         return;
       }
-      _displaySnackbarMessage(
+      displayErrorMessageSnackbar(
         context,
-        _createFailureSnackbar(
-          "Discovery failed!",
-          exception.message,
-        ),
+        "Discovery failed!",
+        exception.message,
       );
     } on FormatException catch (exception) {
       if (!context.mounted) {
         return;
       }
-      _displaySnackbarMessage(
+      displayErrorMessageSnackbar(
         context,
-        _createFailureSnackbar(
-          "Failed to decode discovery result!",
-          exception.message,
-        ),
+        "Failed to decode discovery result!",
+        exception.message,
       );
     }
   }
