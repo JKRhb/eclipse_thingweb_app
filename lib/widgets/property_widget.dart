@@ -117,6 +117,7 @@ class _PropertyState extends State<PropertyWidget> {
           ListTile(
             title: cardTitle,
             subtitle: cardDescription,
+            trailing: const Text("Property"),
           ),
           _PropertyVisualization(_property, _dataWindow),
           OverflowBar(

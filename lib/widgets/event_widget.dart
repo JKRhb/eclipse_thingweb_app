@@ -35,6 +35,7 @@ class _EventState extends State<EventWidget> {
           ListTile(
             title: cardTitle,
             subtitle: cardDescription,
+            trailing: const Text("Event"),
           ),
         ],
       ),

@@ -36,6 +36,7 @@ class _ActionState extends State<ActionWidget> {
           ListTile(
             title: cardTitle,
             subtitle: cardDescription,
+            trailing: const Text("Action"),
           ),
         ],
       ),
