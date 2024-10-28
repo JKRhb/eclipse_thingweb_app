@@ -66,17 +66,17 @@ class InputFormState extends State<InputForm> {
               children: [
                 ElevatedButton(
                   onPressed: () {
+                    widget.cancelCallback(widget.initialValue);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       widget.submitCallback(_discoveryUrlController.text);
                     }
                   },
                   child: const Text('Submit'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    widget.cancelCallback(widget.initialValue);
-                  },
-                  child: const Text('Cancel'),
                 ),
               ],
             ),
