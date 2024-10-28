@@ -103,6 +103,8 @@ class _PropertyState extends State<PropertyWidget> {
     }
   }
 
+  bool get isNumericDataType => ["integer", "number"].contains(_property.type);
+
   @override
   Widget build(BuildContext context) {
     final propertyDescription = _property.description;
@@ -119,17 +121,18 @@ class _PropertyState extends State<PropertyWidget> {
             subtitle: cardDescription,
             trailing: const Text("Property"),
           ),
-          _PropertyVisualization(_property, _dataWindow),
-          OverflowBar(
-            children: [
-              IconButton(
-                onPressed: _triggerConsumption,
-                icon: Icon(
-                  !_running ? Icons.play_arrow : Icons.stop,
-                ),
-              )
-            ],
-          )
+          if (isNumericDataType) _PropertyVisualization(_property, _dataWindow),
+          if (isNumericDataType)
+            OverflowBar(
+              children: [
+                IconButton(
+                  onPressed: _triggerConsumption,
+                  icon: Icon(
+                    !_running ? Icons.play_arrow : Icons.stop,
+                  ),
+                )
+              ],
+            )
         ],
       ),
     );
