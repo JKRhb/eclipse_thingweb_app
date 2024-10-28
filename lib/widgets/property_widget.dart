@@ -91,7 +91,6 @@ class _PropertyState extends State<PropertyWidget> {
   Future<void> _toggleObserve() async {
     if (_observing) {
       await _subscription?.stop();
-      _subscription = null;
     }
 
     setState(() {

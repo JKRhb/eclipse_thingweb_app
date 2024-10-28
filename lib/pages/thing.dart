@@ -62,6 +62,31 @@ class _ThingPageState extends State<ThingPage> {
     _consumedThing = widget._wot.consume(widget._thingDescription);
   }
 
+  FutureBuilder<ConsumedThing> get _affordanceWidgets => FutureBuilder(
+        future: _consumedThing,
+        builder: (BuildContext context, AsyncSnapshot<ConsumedThing> snapshot) {
+          if (snapshot.hasData) {
+            return Column(
+              children: _interactionAffordances.entries
+                  .map(
+                    (property) => AffordanceWidget.create(
+                      snapshot.data!,
+                      property.value,
+                      property.key,
+                    ),
+                  )
+                  .toList(),
+            );
+          }
+
+          if (snapshot.hasError) {
+            throw snapshot.error!;
+          }
+
+          return const CircularProgressIndicator();
+        },
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,31 +100,7 @@ class _ThingPageState extends State<ThingPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              FutureBuilder(
-                future: _consumedThing,
-                builder: (BuildContext context,
-                    AsyncSnapshot<ConsumedThing> snapshot) {
-                  if (snapshot.hasData) {
-                    return Column(
-                      children: _interactionAffordances.entries
-                          .map(
-                            (property) => AffordanceWidget.create(
-                              snapshot.data!,
-                              property.value,
-                              property.key,
-                            ),
-                          )
-                          .toList(),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    throw snapshot.error!;
-                  }
-
-                  return const CircularProgressIndicator();
-                },
-              ),
+              _affordanceWidgets,
             ],
           ),
         ),
