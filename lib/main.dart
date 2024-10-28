@@ -1,7 +1,7 @@
 import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
-import 'package:eclipse_thingweb_demo_app/pages/graph.dart';
+import 'package:eclipse_thingweb_app/pages/graph.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
