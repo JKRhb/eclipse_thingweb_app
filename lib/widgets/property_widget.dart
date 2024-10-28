@@ -52,55 +52,37 @@ class _PropertyState extends State<PropertyWidget> {
 
   final int _maxElements = 50;
 
-  ConsumedThing? _consumedThing;
-
   Subscription? _subscription;
 
   @override
   void dispose() {
     _subscription?.stop();
     _subscription = null;
-    _consumedThing = null;
     super.dispose();
   }
 
   Future<void> _triggerConsumption() async {
-    if (_running) {
-      await _subscription?.stop();
-    }
-
     setState(() {
-      if (_running) {
-        _subscription = null;
-        _consumedThing = null;
-      }
       _running = !_running;
     });
 
     if (!_running) {
+      await _subscription?.stop();
+      _subscription = null;
       return;
     }
 
-    if (_consumedThing == null) {
-      final propertyName = _propertyKey;
+    _subscription = await widget._consumedThing.observeProperty(_propertyKey,
+        (interactionOutput) async {
+      final value = await interactionOutput.value();
 
-      final consumedThing = widget._consumedThing;
-      _subscription = await consumedThing.observeProperty(propertyName,
-          (interactionOutput) async {
-        final value = await interactionOutput.value();
-
-        if (_subscription != null && value is num) {
-          setState(() {
-            _data.add((_counter.toDouble(), value.toDouble()));
-            _counter++;
-          });
-        }
-      });
-
-      setState(() {
-        _consumedThing = consumedThing;
-      });
-    }
+      if (_subscription != null && value is num) {
+        setState(() {
+          _data.add((_counter.toDouble(), value.toDouble()));
+          _counter++;
+        });
+      }
+    });
   }
 
   bool get isNumericDataType => ["integer", "number"].contains(_property.type);

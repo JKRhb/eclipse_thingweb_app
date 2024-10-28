@@ -17,9 +17,23 @@ final class EventWidget extends AffordanceWidget {
 }
 
 class _EventState extends State<EventWidget> {
+  bool _subscribed = false;
+
+  Subscription? _subscription;
+
   Event get _event => widget._event;
 
   String? get _eventTitle => widget._event.title;
+
+  void _subscribeToEvent() async {
+    if (_subscribed) {
+      await _subscription?.stop();
+    }
+
+    setState(() {
+      _subscribed = !_subscribed;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +51,16 @@ class _EventState extends State<EventWidget> {
             subtitle: cardDescription,
             trailing: const Text("Event"),
           ),
+          OverflowBar(
+            children: [
+              IconButton(
+                onPressed: _subscribeToEvent,
+                icon: Icon(
+                  !_subscribed ? Icons.play_arrow : Icons.stop,
+                ),
+              )
+            ],
+          )
         ],
       ),
     );
