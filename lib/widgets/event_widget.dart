@@ -23,7 +23,7 @@ class _EventState extends State<EventWidget> {
 
   Event get _event => widget._event;
 
-  String? get _eventTitle => widget._event.title;
+  String? get _eventTitle => _event.title;
 
   void _subscribeToEvent() async {
     if (_subscribed) {
@@ -33,6 +33,27 @@ class _EventState extends State<EventWidget> {
     setState(() {
       _subscribed = !_subscribed;
     });
+
+    if (!_subscribed) {
+      return;
+    }
+
+    _subscription = await widget._consumedThing.subscribeEvent(
+      widget._affordanceKey,
+      (interactionOutput) async {
+        final value = await interactionOutput.value();
+
+        if (!mounted) {
+          return;
+        }
+
+        // TODO: Handle event data more elegantly
+        displaySuccessMessageSnackbar(
+          context,
+          value.toString(),
+        );
+      },
+    );
   }
 
   @override
