@@ -3,56 +3,32 @@ part of "affordance_widget.dart";
 final class ActionWidget extends AffordanceWidget {
   const ActionWidget(
     super._consumedThing,
-    this._affordanceKey,
-    this._action, {
+    super._affordanceKey,
+    dart_wot.Action action, {
     super.key,
-  });
+  }) : _interactionAffordance = action;
 
-  final dart_wot.Action _action;
-
-  final String _affordanceKey;
+  @override
+  final dart_wot.Action _interactionAffordance;
 
   @override
   State<StatefulWidget> createState() => _ActionState();
 }
 
-class _ActionState extends State<ActionWidget> {
-  dart_wot.Action get _event => widget._action;
-
-  String? get _actionTitle => widget._action.title;
-
+final class _ActionState extends _AffordanceState<ActionWidget> {
   void _invokeAction() async {
     await widget._consumedThing.invokeAction(widget._affordanceKey);
   }
 
   @override
-  Widget build(BuildContext context) {
-    final cardTitle = Text(_actionTitle ?? widget._affordanceKey);
+  List<Widget> get _cardBody => [];
 
-    // TODO: Refactor this.
-    final actionDescription = _event.description;
-    final cardDescription =
-        actionDescription != null ? Text(actionDescription) : null;
-
-    return Card(
-      child: Column(
-        children: [
-          ListTile(
-            title: cardTitle,
-            subtitle: cardDescription,
-            trailing: const Text("Action"),
-          ),
-          OverflowBar(
-            children: [
-              IconButton(
-                onPressed: _invokeAction,
-                // TODO: Improve Icon and button behavior
-                icon: const Icon(Icons.pin_invoke),
-              )
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  @override
+  List<Widget> get _cardButtons => [
+        IconButton(
+          onPressed: _invokeAction,
+          // TODO: Improve Icon and button behavior
+          icon: const Icon(Icons.pin_invoke),
+        ),
+      ];
 }

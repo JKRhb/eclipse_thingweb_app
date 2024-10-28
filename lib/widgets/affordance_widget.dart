@@ -13,11 +13,16 @@ part "event_widget.dart";
 
 abstract base class AffordanceWidget extends StatefulWidget {
   const AffordanceWidget(
-    this._consumedThing, {
+    this._consumedThing,
+    this._affordanceKey, {
     super.key,
   });
 
   final ConsumedThing _consumedThing;
+
+  InteractionAffordance get _interactionAffordance;
+
+  final String _affordanceKey;
 
   factory AffordanceWidget.create(
     ConsumedThing consumedThing,
@@ -34,5 +39,53 @@ abstract base class AffordanceWidget extends StatefulWidget {
       case Event():
         return EventWidget(consumedThing, affordanceKey, interactionAffordance);
     }
+  }
+
+  String get affordanceType {
+    switch (_interactionAffordance) {
+      case dart_wot.Action():
+        return "Action";
+      case Event():
+        return "Event";
+      case Property():
+        return "Property";
+    }
+  }
+}
+
+abstract base class _AffordanceState<T extends AffordanceWidget>
+    extends State<T> {
+  ListTile get _cardHeader {
+    final cardTitle =
+        Text(widget._interactionAffordance.title ?? widget._affordanceKey);
+
+    final actionDescription = widget._interactionAffordance.description;
+    final cardDescription =
+        actionDescription != null ? Text(actionDescription) : null;
+
+    return ListTile(
+      title: cardTitle,
+      subtitle: cardDescription,
+      trailing: Text(widget.affordanceType),
+    );
+  }
+
+  List<Widget> get _cardBody;
+
+  List<Widget> get _cardButtons;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          _cardHeader,
+          ..._cardBody,
+          OverflowBar(
+            children: _cardButtons,
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -9,21 +9,19 @@ part of "affordance_widget.dart";
 final class PropertyWidget extends AffordanceWidget {
   const PropertyWidget(
     super._consumedThing,
-    this._affordanceKey,
+    super._affordanceKey,
     Property property, {
     super.key,
   }) : _interactionAffordance = property;
 
+  @override
   final Property _interactionAffordance;
-
-  final String _affordanceKey;
 
   @override
   State<StatefulWidget> createState() => _PropertyState();
 }
 
-// TODO: Create super class for the affordance state
-class _PropertyState extends State<PropertyWidget> {
+final class _PropertyState extends _AffordanceState<PropertyWidget> {
   _PropertyState();
 
   bool _observing = false;
@@ -49,8 +47,6 @@ class _PropertyState extends State<PropertyWidget> {
   Property get _property => widget._interactionAffordance;
 
   String get _propertyKey => widget._affordanceKey;
-
-  String? get _propertyTitle => _property.title;
 
   final int _maxElements = 50;
 
@@ -120,49 +116,31 @@ class _PropertyState extends State<PropertyWidget> {
   bool get isNumericDataType => ["integer", "number"].contains(_property.type);
 
   @override
-  Widget build(BuildContext context) {
-    final propertyDescription = _property.description;
+  List<Widget> get _cardBody => [
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          alignment: Alignment.centerLeft,
+          child: Text(_lastValue != null ? "Current value: $_lastValue" : ""),
+        ),
+        if (isNumericDataType && _dataWindow.isNotEmpty)
+          _PropertyVisualization(_property, _dataWindow),
+      ];
 
-    final cardTitle = Text(_propertyTitle ?? widget._affordanceKey);
-    final cardDescription =
-        propertyDescription != null ? Text(propertyDescription) : null;
-
-    return Card(
-      child: Column(
-        children: [
-          ListTile(
-            title: cardTitle,
-            subtitle: cardDescription,
-            trailing: const Text("Property"),
+  @override
+  List<Widget> get _cardButtons => [
+        if (!_property.writeOnly)
+          IconButton(
+            onPressed: _readValue,
+            icon: const Icon(Icons.download),
           ),
-          OverflowBar(
-            alignment: MainAxisAlignment.end,
-            children: [
-              if (!_property.writeOnly)
-                IconButton(
-                  onPressed: _readValue,
-                  icon: const Icon(Icons.download),
-                ),
-              if (_property.observable)
-                IconButton(
-                  onPressed: _toggleObserve,
-                  icon: Icon(
-                    !_observing ? Icons.play_arrow : Icons.stop,
-                  ),
-                ),
-            ],
+        if (_property.observable)
+          IconButton(
+            onPressed: _toggleObserve,
+            icon: Icon(
+              !_observing ? Icons.play_arrow : Icons.stop,
+            ),
           ),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            alignment: Alignment.centerLeft,
-            child: Text(_lastValue != null ? "Current value: $_lastValue" : ""),
-          ),
-          if (isNumericDataType && _dataWindow.isNotEmpty)
-            _PropertyVisualization(_property, _dataWindow),
-        ],
-      ),
-    );
-  }
+      ];
 }
 
 class _PropertyVisualization extends StatelessWidget {

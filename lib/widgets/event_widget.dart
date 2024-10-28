@@ -3,27 +3,22 @@ part of "affordance_widget.dart";
 final class EventWidget extends AffordanceWidget {
   const EventWidget(
     super._consumedThing,
-    this._affordanceKey,
-    this._event, {
+    super._affordanceKey,
+    Event event, {
     super.key,
-  });
-
-  final Event _event;
-
-  final String _affordanceKey;
+  }) : _interactionAffordance = event;
 
   @override
   State<StatefulWidget> createState() => _EventState();
+
+  @override
+  final Event _interactionAffordance;
 }
 
-class _EventState extends State<EventWidget> {
+final class _EventState extends _AffordanceState<EventWidget> {
   bool _subscribed = false;
 
   Subscription? _subscription;
-
-  Event get _event => widget._event;
-
-  String? get _eventTitle => _event.title;
 
   void _subscribeToEvent() async {
     if (_subscribed) {
@@ -57,33 +52,15 @@ class _EventState extends State<EventWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final eventDescription = _event.description;
+  List<Widget> get _cardBody => [];
 
-    final cardTitle = Text(_eventTitle ?? widget._affordanceKey);
-    final cardDescription =
-        eventDescription != null ? Text(eventDescription) : null;
-
-    return Card(
-      child: Column(
-        children: [
-          ListTile(
-            title: cardTitle,
-            subtitle: cardDescription,
-            trailing: const Text("Event"),
+  @override
+  List<Widget> get _cardButtons => [
+        IconButton(
+          onPressed: _subscribeToEvent,
+          icon: Icon(
+            !_subscribed ? Icons.play_arrow : Icons.stop,
           ),
-          OverflowBar(
-            children: [
-              IconButton(
-                onPressed: _subscribeToEvent,
-                icon: Icon(
-                  !_subscribed ? Icons.play_arrow : Icons.stop,
-                ),
-              )
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+        )
+      ];
 }
