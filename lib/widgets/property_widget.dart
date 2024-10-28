@@ -26,16 +26,18 @@ final class PropertyWidget extends AffordanceWidget {
 class _PropertyState extends State<PropertyWidget> {
   _PropertyState();
 
-  bool _running = false;
+  bool _observing = false;
 
-  int _counter = 0;
+  Object? _lastValue;
 
-  final List<(double, double)> _data = [];
+  ConsumedThing get consumedThing => widget._consumedThing;
+
+  final List<(int, double)> _data = [];
 
   int get _initialWindowIndex => max(0, _data.length - _maxElements);
 
-  List<(double, double)> get _dataWindow {
-    final result = <(double, double)>[];
+  List<(int, double)> get _dataWindow {
+    final result = <(int, double)>[];
 
     for (var i = _initialWindowIndex; i < _data.length; i++) {
       result.add(_data[i]);
@@ -61,28 +63,47 @@ class _PropertyState extends State<PropertyWidget> {
     super.dispose();
   }
 
-  Future<void> _triggerConsumption() async {
-    setState(() {
-      _running = !_running;
-    });
+  Future<void> _readValue() async {
+    final output = await consumedThing.readProperty(_propertyKey);
+    final value = await output.value();
 
-    if (!_running) {
+    if (value is num) {
+      _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
+    }
+
+    setState(() {
+      _lastValue = value;
+    });
+  }
+
+  Future<void> _toggleObserve() async {
+    if (_observing) {
       await _subscription?.stop();
       _subscription = null;
+    }
+
+    setState(() {
+      _observing = !_observing;
+    });
+
+    if (!_observing) {
       return;
     }
 
-    _subscription = await widget._consumedThing.observeProperty(_propertyKey,
-        (interactionOutput) async {
-      final value = await interactionOutput.value();
+    _subscription = await consumedThing.observeProperty(
+      _propertyKey,
+      (interactionOutput) async {
+        final value = await interactionOutput.value();
 
-      if (_subscription != null && value is num) {
+        if (_subscription != null && value is num) {
+          _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
+        }
+
         setState(() {
-          _data.add((_counter.toDouble(), value.toDouble()));
-          _counter++;
+          _lastValue = value;
         });
-      }
-    });
+      },
+    );
   }
 
   bool get isNumericDataType => ["integer", "number"].contains(_property.type);
@@ -103,18 +124,29 @@ class _PropertyState extends State<PropertyWidget> {
             subtitle: cardDescription,
             trailing: const Text("Property"),
           ),
-          if (isNumericDataType) _PropertyVisualization(_property, _dataWindow),
-          if (isNumericDataType)
-            OverflowBar(
-              children: [
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            alignment: Alignment.centerLeft,
+            child: Text(_lastValue != null ? "Current value: $_lastValue" : ""),
+          ),
+          OverflowBar(
+            alignment: MainAxisAlignment.end,
+            children: [
+              if (!_property.writeOnly)
                 IconButton(
-                  onPressed: _triggerConsumption,
+                  onPressed: _readValue,
+                  icon: const Icon(Icons.download),
+                ),
+              if (_property.observable)
+                IconButton(
+                  onPressed: _toggleObserve,
                   icon: Icon(
-                    !_running ? Icons.play_arrow : Icons.stop,
+                    !_observing ? Icons.play_arrow : Icons.stop,
                   ),
-                )
-              ],
-            )
+                ),
+            ],
+          ),
+          if (isNumericDataType) _PropertyVisualization(_property, _dataWindow),
         ],
       ),
     );
@@ -128,48 +160,62 @@ class _PropertyVisualization extends StatelessWidget {
 
   String? get _propertyTitle => _property.title;
 
-  final List<(double, double)> _data;
+  final List<(int, double)> _data;
 
-  List<FlSpot> get _spots => _data.map((e) => FlSpot(e.$1, e.$2)).toList();
+  List<FlSpot> get _spots =>
+      _data.map((e) => FlSpot(e.$1.toDouble(), e.$2)).toList();
 
   Text? get axisTitle =>
       _propertyTitle != null ? Text("$_propertyTitle over Time") : null;
 
   @override
-  Widget build(BuildContext context) => AspectRatio(
-        aspectRatio: 2.0,
-        child: LineChart(
-          LineChartData(
-            minY: _property.minimum?.toDouble(),
-            maxY: _property.maximum?.toDouble(),
-            clipData: const FlClipData.all(),
-            titlesData: FlTitlesData(
-              bottomTitles: const AxisTitles(
-                axisNameWidget: Text(''),
-                axisNameSize: 24,
-                sideTitles: SideTitles(
-                  showTitles: false,
-                  reservedSize: 0,
-                ),
-              ),
-              topTitles: AxisTitles(
-                axisNameWidget: axisTitle,
-                axisNameSize: 24,
-                sideTitles: const SideTitles(
-                  showTitles: false,
-                  reservedSize: 0,
-                ),
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 2.0,
+      child: LineChart(
+        LineChartData(
+          minY: _property.minimum?.toDouble(),
+          maxY: _property.maximum?.toDouble(),
+          clipData: const FlClipData.all(),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              axisNameWidget: const Text('Time'),
+              axisNameSize: 24,
+              sideTitles: SideTitles(
+                showTitles: true,
+                // FIXME: This is still not that great
+                interval: const Duration(seconds: 60).inMilliseconds.toDouble(),
+                getTitlesWidget: (value, metaData) {
+                  final DateTime date =
+                      DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                  final parts = date.toIso8601String().split("T");
+
+                  return SideTitleWidget(
+                    axisSide: AxisSide.bottom,
+                    child: Text(parts.first),
+                  );
+                },
               ),
             ),
-            lineBarsData: [
-              LineChartBarData(
-                show: true,
-                isCurved: true,
-                spots: _spots,
-              )
-            ],
+            topTitles: AxisTitles(
+              axisNameWidget: axisTitle,
+              axisNameSize: 24,
+              sideTitles: const SideTitles(
+                showTitles: false,
+                reservedSize: 0,
+              ),
+            ),
           ),
-          duration: Duration.zero,
+          lineBarsData: [
+            LineChartBarData(
+              show: true,
+              isCurved: true,
+              spots: _spots,
+            ),
+          ],
         ),
-      );
+        duration: Duration.zero,
+      ),
+    );
+  }
 }
