@@ -1,16 +1,10 @@
 # eclipse_thingweb_app
 
-A new Flutter project.
+This repository contains a Flutter app built upon the Eclipse Thingweb project
+`dart_wot`.
+It illustrates how to use the W3C Web of Things specifications to create an app
+that is capable of interacting with Things using HTTP, MQTT, and CoAP.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+At the moment, the app supports all non-Web platforms (i.e., Android, iOS,
+macOS, Linux, and Windows), although support for secure communication using
+CoAP is currently limited.
