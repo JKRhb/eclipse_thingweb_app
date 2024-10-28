@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'graph.dart';
-
 class HomePage extends StatefulWidget {
   const HomePage(
     this._wot,
@@ -33,7 +31,6 @@ class HomePage extends StatefulWidget {
 typedef _DiscoveryPreferences = ({
   String? discoveryUrl,
   String? discoveryMethod,
-  String? propertyName
 });
 
 class _HomePageState extends State<HomePage> {
@@ -47,18 +44,10 @@ class _HomePageState extends State<HomePage> {
       discoveryMethod:
           (await preferences.getString(discoveryMethodSettingsKey) ??
               defaultDiscoveryMethod),
-      propertyName: await preferences.getString(propertyNameSettingsKey),
     );
   }
 
-  void _registerThingDescription(
-      ThingDescription thingDescription, propertyName) {
-    final properties = thingDescription.properties ?? {};
-
-    if (!properties.containsKey(propertyName)) {
-      return;
-    }
-
+  void _registerThingDescription(ThingDescription thingDescription) {
     setState(() {
       _thingDescriptions.add(thingDescription);
     });
@@ -105,16 +94,9 @@ class _HomePageState extends State<HomePage> {
       _thingDescriptions.clear();
     });
 
-    final (:discoveryUrl, :discoveryMethod, :propertyName) =
-        discoveryPreferences;
+    final (:discoveryUrl, :discoveryMethod) = discoveryPreferences;
 
     try {
-      if (propertyName == null) {
-        throw const DiscoveryException(
-          "A property name to filter TDs must be set in the preferences.",
-        );
-      }
-
       if (discoveryUrl == null) {
         throw const DiscoveryException(
           "A discovery URL must be set in the preferences.",
@@ -127,10 +109,7 @@ class _HomePageState extends State<HomePage> {
         case "Direct":
           final thingDescription =
               await widget._wot.requestThingDescription(parsedDiscoveryUrl);
-          _registerThingDescription(
-            thingDescription,
-            propertyName,
-          );
+          _registerThingDescription(thingDescription);
 
           if (context.mounted) {
             _displaySnackbarMessage(context, _successSnackBar);
@@ -141,10 +120,7 @@ class _HomePageState extends State<HomePage> {
               await widget._wot.exploreDirectory(parsedDiscoveryUrl);
 
           await for (final thingDescription in discoveryProcess) {
-            _registerThingDescription(
-              thingDescription,
-              propertyName,
-            );
+            _registerThingDescription(thingDescription);
           }
 
           if (context.mounted) {
@@ -157,8 +133,8 @@ class _HomePageState extends State<HomePage> {
       }
 
       if (_thingDescriptions.isEmpty) {
-        throw DiscoveryException(
-          "Did not discovery any TDs with property name $propertyName",
+        throw const DiscoveryException(
+          "No TDs have been discovered.",
         );
       }
     } on DiscoveryException catch (exception) {
@@ -242,43 +218,15 @@ class _HomePageState extends State<HomePage> {
                   subtitle: description != null ? Text(description) : null,
                   leading: const Icon(Icons.electric_bolt),
                   onTap: () async {
-                    final propertyName = await widget._preferencesAsync
-                        .getString(propertyNameSettingsKey);
-
                     if (!context.mounted) {
-                      return;
-                    }
-
-                    if (propertyName == null || propertyName.isEmpty) {
-                      final snackbar = _createFailureSnackbar(
-                        "Cannot start interaction",
-                        "No property name set.",
-                      );
-
-                      _displaySnackbarMessage(context, snackbar);
-                      return;
-                    }
-
-                    final properties = thingDescription.properties ?? {};
-
-                    if (!(properties).containsKey(propertyName)) {
-                      final snackbar = _createFailureSnackbar(
-                        "Cannot start interaction",
-                        "Thing Description does not include property name $propertyName.",
-                      );
-
-                      _displaySnackbarMessage(context, snackbar);
                       return;
                     }
 
                     ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
                     context.push(
-                      "/graph",
-                      extra: GraphData(
-                        thingDescription,
-                        propertyName,
-                      ),
+                      "/thing",
+                      extra: thingDescription,
                     );
                   },
                 ),

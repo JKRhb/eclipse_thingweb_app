@@ -29,8 +29,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   late Future<String?> _discoveryUrl;
 
-  late Future<String?> _propertyName;
-
   @override
   void initState() {
     super.initState();
@@ -38,7 +36,6 @@ class _SettingsPageState extends State<SettingsPage> {
     _discoveryMethod =
         widget._preferencesAsync.getString(discoveryMethodSettingsKey);
     _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
-    _propertyName = widget._preferencesAsync.getString(propertyNameSettingsKey);
   }
 
   static String _formatDiscoveryUrl(String? discoveryUrl) {
@@ -182,61 +179,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     }
                   },
                 ),
-              ),
-              SettingsTile(
-                title: const Text('Property Name'),
-                leading: const Icon(Icons.featured_play_list),
-                trailing: FutureBuilder(
-                  future: _propertyName,
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    } else {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-
-                      final currentPropertyName = snapshot.data;
-
-                      return Text(
-                        currentPropertyName ?? "Unset",
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    }
-                  },
-                ),
-                onPressed: (BuildContext context) async {
-                  final currentValue = await widget._preferencesAsync
-                      .getString(propertyNameSettingsKey);
-
-                  final result = await _openDialog(
-                    "Enter a Property Name",
-                    currentValue,
-                  );
-
-                  if (result == null) {
-                    await widget._preferencesAsync
-                        .remove(propertyNameSettingsKey);
-
-                    setState(() {
-                      _propertyName = Future.value(null);
-                    });
-                    return;
-                  }
-
-                  await widget._preferencesAsync.setString(
-                    propertyNameSettingsKey,
-                    result,
-                  );
-
-                  setState(() {
-                    _propertyName = Future.value(result);
-                  });
-                },
               ),
             ],
           ),

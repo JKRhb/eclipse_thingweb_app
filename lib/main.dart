@@ -7,7 +7,7 @@
 import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
-import 'package:eclipse_thingweb_app/pages/graph.dart';
+import 'package:eclipse_thingweb_app/pages/thing.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +18,6 @@ import 'pages/settings.dart';
 
 const discoveryMethodSettingsKey = "discovery-method-key";
 const discoveryUrlSettingsKey = "discovery-url-key";
-const propertyNameSettingsKey = "property-name-key";
 
 const defaultDiscoveryMethod = "Direct";
 
@@ -43,7 +42,7 @@ class WotApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const title = "Voltage Monitor";
+    const title = "Eclipse Thingweb App";
 
     const thingwebPrimary = Color(0x00067362);
     const thingwebSecondary = Color(0x00B84A91);
@@ -76,18 +75,19 @@ class WotApp extends StatelessWidget {
             builder: (context, state) => SettingsPage(_preferences),
           ),
           GoRoute(
-            path: '/graph',
+            path: '/thing',
             builder: (context, state) {
               final data = state.extra;
 
-              if (data is! GraphData) {
-                throw StateError("Got $data, ${data.runtimeType}");
+              if (data is! ThingDescription) {
+                throw StateError(
+                  "Expected Thing Description, got $data of type ${data.runtimeType}",
+                );
               }
 
-              return GraphPage(
+              return ThingPage(
                 _wot,
-                data.thingDescription,
-                data.propertyName,
+                data,
                 title: title,
               );
             },
