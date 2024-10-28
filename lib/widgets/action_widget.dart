@@ -21,6 +21,10 @@ class _ActionState extends State<ActionWidget> {
 
   String? get _actionTitle => widget._action.title;
 
+  void _invokeAction() async {
+    await widget._consumedThing.invokeAction(widget._affordanceKey);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cardTitle = Text(_actionTitle ?? widget._affordanceKey);
@@ -37,6 +41,15 @@ class _ActionState extends State<ActionWidget> {
             title: cardTitle,
             subtitle: cardDescription,
             trailing: const Text("Action"),
+          ),
+          OverflowBar(
+            children: [
+              IconButton(
+                onPressed: _invokeAction,
+                // TODO: Improve Icon and button behavior
+                icon: const Icon(Icons.pin_invoke),
+              )
+            ],
           ),
         ],
       ),
