@@ -62,6 +62,22 @@ class _ThingPageState extends State<ThingPage> {
     _consumedThing = widget._wot.consume(widget._thingDescription);
   }
 
+  // TODO: Improve formatting.
+  Card get _metadataWidget {
+    final id = widget._thingDescription.id;
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            title: Text(widget._thingDescription.title),
+            subtitle: Text(widget._thingDescription.description ?? ""),
+          ),
+          if (id != null) Text("ID: $id"),
+        ],
+      ),
+    );
+  }
+
   FutureBuilder<ConsumedThing> get _affordanceWidgets => FutureBuilder(
         future: _consumedThing,
         builder: (BuildContext context, AsyncSnapshot<ConsumedThing> snapshot) {
@@ -95,14 +111,12 @@ class _ThingPageState extends State<ThingPage> {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text(widget._thingDescription.title),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _affordanceWidgets,
-            ],
-          ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _metadataWidget,
+            _affordanceWidgets,
+          ],
         ),
       ),
     );

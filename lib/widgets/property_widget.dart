@@ -135,11 +135,6 @@ class _PropertyState extends State<PropertyWidget> {
             subtitle: cardDescription,
             trailing: const Text("Property"),
           ),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            alignment: Alignment.centerLeft,
-            child: Text(_lastValue != null ? "Current value: $_lastValue" : ""),
-          ),
           OverflowBar(
             alignment: MainAxisAlignment.end,
             children: [
@@ -157,7 +152,13 @@ class _PropertyState extends State<PropertyWidget> {
                 ),
             ],
           ),
-          if (isNumericDataType) _PropertyVisualization(_property, _dataWindow),
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            alignment: Alignment.centerLeft,
+            child: Text(_lastValue != null ? "Current value: $_lastValue" : ""),
+          ),
+          if (isNumericDataType && _dataWindow.isNotEmpty)
+            _PropertyVisualization(_property, _dataWindow),
         ],
       ),
     );
