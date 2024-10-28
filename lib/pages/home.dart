@@ -121,8 +121,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  static AlignmentGeometry _positionBadge(int notificationsCount) {
+    if (notificationsCount > 999) {
+      return AlignmentDirectional.topStart;
+    }
+
+    return AlignmentDirectional.topEnd;
+  }
+
   @override
   Widget build(BuildContext context) {
+    const notificationCount = 9999;
+
     return Scaffold(
       floatingActionButton: FutureBuilder(
         future: _discoveryPreferences,
@@ -149,11 +159,19 @@ class _HomePageState extends State<HomePage> {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
           IconButton(
+            icon: Badge.count(
+              count: notificationCount,
+              alignment: _positionBadge(notificationCount),
+              child: const Icon(Icons.notifications),
+            ),
+            onPressed: () {},
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => {
               context.push("/settings"),
             },
-          )
+          ),
         ],
       ),
       body: RefreshIndicator(

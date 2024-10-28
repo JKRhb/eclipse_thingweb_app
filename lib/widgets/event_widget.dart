@@ -51,7 +51,7 @@ final class _EventState extends _AffordanceState<EventWidget> {
         // TODO: Handle event data more elegantly
         displaySuccessMessageSnackbar(
           context,
-          value.toString(),
+          "Received Event: $value",
         );
       },
     );
