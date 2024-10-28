@@ -6,15 +6,24 @@
 
 import 'package:flutter/material.dart';
 
+/// Displays a [SnackBar] with a [successMessage] within the current [context].
+///
+/// Before the message is displayed, the current [SnackBar] is going to be
+/// removed.
 void displaySuccessMessageSnackbar(
   BuildContext context,
-  String snackbarMessage,
+  String successMessage,
 ) {
-  final snackbar = _createSuccessSnackbar(snackbarMessage);
+  final snackbar = _createSuccessSnackbar(successMessage);
 
   _displaySnackbarMessage(context, snackbar);
 }
 
+/// Displays a [SnackBar] with an [errorMessage] and the specified [errorTitle]
+/// within the current [context].
+///
+/// Before the message is displayed, the current [SnackBar] is going to be
+/// removed.
 void displayErrorMessageSnackbar(
     BuildContext context, String errorTitle, String errorMessage) {
   final snackbar = _createErrorSnackbar(errorTitle, errorMessage);

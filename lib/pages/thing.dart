@@ -9,23 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:dart_wot/core.dart';
 import 'package:dart_wot/core.dart' as dart_wot;
 
-class ThingData {
-  ThingData(this.thingDescription, this.propertyName);
-
-  final ThingDescription thingDescription;
-
-  final String propertyName;
-}
-
+/// A page that lists all of the interaction affordances of Thing listed within
+/// its [_thingDescription].
+///
+///
 class ThingPage extends StatefulWidget {
   const ThingPage(
     this._wot,
     this._thingDescription, {
     super.key,
-    required this.title,
   });
-
-  final String title;
 
   final WoT _wot;
 

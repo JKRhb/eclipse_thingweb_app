@@ -88,7 +88,6 @@ class WotApp extends StatelessWidget {
               return ThingPage(
                 _wot,
                 data,
-                title: title,
               );
             },
           ),
