@@ -4,12 +4,14 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'package:dart_wot/binding_coap.dart';
 import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/pages/thing.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,22 +23,37 @@ const discoveryUrlSettingsKey = "discovery-url-key";
 
 const defaultDiscoveryMethod = "Direct";
 
-Future<void> main() async {
+final wotProvider = FutureProvider.autoDispose((ref) async {
   final servient = Servient.create(clientFactories: [
+    CoapClientFactory(),
     MqttClientFactory(),
     HttpClientFactory(),
   ]);
-  final wot = servient.startClientFactories();
 
+  return servient.start();
+});
+
+final consumedThingProvider = FutureProvider.autoDispose
+    .family<ConsumedThing, ThingDescription>((ref, thingDescription) async {
+  final wot = await ref.watch(wotProvider.future);
+
+  return wot.consume(thingDescription);
+});
+
+Future<void> main() async {
   final preferences = SharedPreferencesAsync();
 
-  runApp(WotApp(wot, preferences));
+  runApp(
+    ProviderScope(
+      child: WotApp(
+        preferences,
+      ),
+    ),
+  );
 }
 
 class WotApp extends StatelessWidget {
-  const WotApp(this._wot, this._preferences, {super.key});
-
-  final WoT _wot;
+  const WotApp(this._preferences, {super.key});
 
   final SharedPreferencesAsync _preferences;
 
@@ -65,7 +82,6 @@ class WotApp extends StatelessWidget {
           GoRoute(
             path: '/',
             builder: (context, state) => HomePage(
-              _wot,
               _preferences,
               title: title,
             ),
@@ -86,7 +102,6 @@ class WotApp extends StatelessWidget {
               }
 
               return ThingPage(
-                _wot,
                 data,
               );
             },

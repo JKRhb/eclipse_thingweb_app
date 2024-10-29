@@ -18,7 +18,7 @@ final class ActionWidget extends AffordanceWidget {
   final dart_wot.Action _interactionAffordance;
 
   @override
-  State<StatefulWidget> createState() => _ActionState();
+  ConsumerState<ActionWidget> createState() => _ActionState();
 }
 
 final class _ActionState extends _AffordanceState<ActionWidget> {

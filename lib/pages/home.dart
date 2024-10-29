@@ -6,27 +6,27 @@
 
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/main.dart';
+import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart';
+import 'package:eclipse_thingweb_app/providers/thing_description_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage(
-    this._wot,
     this._preferencesAsync, {
     super.key,
     required this.title,
   });
-
-  final WoT _wot;
 
   final SharedPreferencesAsync _preferencesAsync;
 
   final String title;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
 typedef _DiscoveryPreferences = ({
@@ -34,9 +34,7 @@ typedef _DiscoveryPreferences = ({
   String? discoveryMethod,
 });
 
-class _HomePageState extends State<HomePage> {
-  final _thingDescriptions = <ThingDescription>[];
-
+class _HomePageState extends ConsumerState<HomePage> {
   Future<_DiscoveryPreferences> get _discoveryPreferences async {
     final preferences = widget._preferencesAsync;
 
@@ -49,16 +47,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _registerThingDescription(ThingDescription thingDescription) {
-    setState(() {
-      _thingDescriptions.add(thingDescription);
-    });
+    ref
+        .read(thingDescriptionProvider.notifier)
+        .addThingDescription(thingDescription);
   }
 
   void _startDiscovery(
       BuildContext context, _DiscoveryPreferences discoveryPreferences) async {
-    setState(() {
-      _thingDescriptions.clear();
-    });
+    final wot = await ref.watch(wotProvider.future);
 
     final (:discoveryUrl, :discoveryMethod) = discoveryPreferences;
 
@@ -74,12 +70,12 @@ class _HomePageState extends State<HomePage> {
       switch (discoveryMethod) {
         case "Direct":
           final thingDescription =
-              await widget._wot.requestThingDescription(parsedDiscoveryUrl);
+              await wot.requestThingDescription(parsedDiscoveryUrl);
           _registerThingDescription(thingDescription);
 
         case "Directory":
           final discoveryProcess =
-              await widget._wot.exploreDirectory(parsedDiscoveryUrl);
+              await wot.exploreDirectory(parsedDiscoveryUrl);
 
           await for (final thingDescription in discoveryProcess) {
             _registerThingDescription(thingDescription);
@@ -89,12 +85,6 @@ class _HomePageState extends State<HomePage> {
           throw DiscoveryException(
             "Unknown or unsupported discovery method $discoveryMethod set.",
           );
-      }
-
-      if (_thingDescriptions.isEmpty) {
-        throw const DiscoveryException(
-          "No TDs have been discovered.",
-        );
       }
 
       if (context.mounted) {
@@ -131,10 +121,16 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    const notificationCount = 9999;
+    List<ThingDescription> thingDescriptions =
+        ref.watch(thingDescriptionProvider);
+
+    List<EventNotification> eventNotifications =
+        ref.watch(eventNotificationProvider);
+    final eventNotificationCount = eventNotifications.length;
 
     return Scaffold(
       floatingActionButton: FutureBuilder(
+        // TODO: Turn into provider
         future: _discoveryPreferences,
         builder: (context, snapshot) {
           const icon = Icon(Icons.travel_explore);
@@ -160,8 +156,10 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: Badge.count(
-              count: notificationCount,
-              alignment: _positionBadge(notificationCount),
+              count: eventNotificationCount,
+              alignment: _positionBadge(eventNotificationCount),
+              // TODO: Add filter for seen or unseen
+              isLabelVisible: eventNotificationCount > 0,
               child: const Icon(Icons.notifications),
             ),
             onPressed: () {},
@@ -185,7 +183,7 @@ class _HomePageState extends State<HomePage> {
           _startDiscovery(context, discoveryPreferences);
         },
         child: ListView(
-          children: _thingDescriptions.map(
+          children: thingDescriptions.map(
             (thingDescription) {
               final description = thingDescription.description;
 

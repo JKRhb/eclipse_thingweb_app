@@ -6,18 +6,21 @@
 
 import 'package:dart_wot/core.dart';
 import 'package:dart_wot/core.dart' as dart_wot;
+import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart';
+import 'package:eclipse_thingweb_app/providers/subscription_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part "action_widget.dart";
 part "property_widget.dart";
 part "event_widget.dart";
 
-abstract base class AffordanceWidget extends StatefulWidget {
+abstract base class AffordanceWidget extends ConsumerStatefulWidget {
   const AffordanceWidget(
     this._consumedThing,
     this._affordanceKey, {
@@ -60,7 +63,7 @@ abstract base class AffordanceWidget extends StatefulWidget {
 }
 
 abstract base class _AffordanceState<T extends AffordanceWidget>
-    extends State<T> {
+    extends ConsumerState<T> {
   ListTile get _cardHeader {
     final cardTitle =
         Text(widget._interactionAffordance.title ?? widget._affordanceKey);

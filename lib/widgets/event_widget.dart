@@ -15,58 +15,62 @@ final class EventWidget extends AffordanceWidget {
   }) : _interactionAffordance = event;
 
   @override
-  State<StatefulWidget> createState() => _EventState();
+  ConsumerState<EventWidget> createState() => _EventState();
 
   @override
   final Event _interactionAffordance;
 }
 
 final class _EventState extends _AffordanceState<EventWidget> {
-  bool _subscribed = false;
-
-  Subscription? _subscription;
-
   void _subscribeToEvent() async {
-    if (_subscribed) {
-      await _subscription?.stop();
-    }
+    final subscriptionState = ref.read(
+      subscriptionStateProvider.notifier,
+    );
 
-    setState(() {
-      _subscribed = !_subscribed;
-    });
+    final subscribed = subscriptionState.hasSubscription(
+      widget._consumedThing,
+      SubscriptionType.event,
+      widget._affordanceKey,
+    );
 
-    if (!_subscribed) {
+    if (subscribed) {
+      await subscriptionState.removeSubscriptionState(
+        widget._consumedThing.thingDescription.id!,
+        SubscriptionType.event,
+        widget._affordanceKey,
+      );
       return;
     }
 
-    _subscription = await widget._consumedThing.subscribeEvent(
-      widget._affordanceKey,
-      (interactionOutput) async {
-        final value = await interactionOutput.value();
-
-        if (!mounted) {
-          return;
-        }
-
-        // TODO: Handle event data more elegantly
-        displaySuccessMessageSnackbar(
-          context,
-          "Received Event: $value",
-        );
-      },
-    );
+    await subscriptionState.addSubscriptionState(
+        widget._consumedThing, widget._affordanceKey);
   }
 
   @override
   List<Widget> get _cardBody => [];
 
   @override
-  List<Widget> get _cardButtons => [
-        IconButton(
-          onPressed: _subscribeToEvent,
-          icon: Icon(
-            !_subscribed ? Icons.play_arrow : Icons.stop,
-          ),
+  List<Widget> get _cardButtons {
+    final subscribed = ref
+        .watch(
+          subscriptionStateProvider,
         )
-      ];
+        .where(
+          (subscriptionState) =>
+              subscriptionState.thingDescriptionId ==
+                  widget._consumedThing.thingDescription.id! &&
+              subscriptionState.subscriptionType == SubscriptionType.event &&
+              subscriptionState.affordanceKey == widget._affordanceKey,
+        )
+        .isNotEmpty;
+
+    return [
+      IconButton(
+        onPressed: _subscribeToEvent,
+        icon: Icon(
+          !subscribed ? Icons.play_arrow : Icons.stop,
+        ),
+      )
+    ];
+  }
 }

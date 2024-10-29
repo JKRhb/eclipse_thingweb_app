@@ -4,31 +4,28 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'package:eclipse_thingweb_app/main.dart';
 import 'package:eclipse_thingweb_app/widgets/affordance_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:dart_wot/core.dart';
 import 'package:dart_wot/core.dart' as dart_wot;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// A page that lists all of the interaction affordances of Thing listed within
+/// A page that lists all the interaction affordances of a Thing listed within
 /// its [_thingDescription].
-///
-///
-class ThingPage extends StatefulWidget {
+class ThingPage extends ConsumerStatefulWidget {
   const ThingPage(
-    this._wot,
     this._thingDescription, {
     super.key,
   });
 
-  final WoT _wot;
-
   final ThingDescription _thingDescription;
 
   @override
-  State<ThingPage> createState() => _ThingPageState();
+  ConsumerState<ThingPage> createState() => _ThingPageState();
 }
 
-class _ThingPageState extends State<ThingPage> {
+class _ThingPageState extends ConsumerState<ThingPage> {
   Map<String, Property> get _properties =>
       widget._thingDescription.properties ?? {};
 
@@ -46,15 +43,6 @@ class _ThingPageState extends State<ThingPage> {
         ],
       );
 
-  late Future<ConsumedThing> _consumedThing;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _consumedThing = widget._wot.consume(widget._thingDescription);
-  }
-
   // TODO: Improve formatting.
   Card get _metadataWidget {
     final id = widget._thingDescription.id;
@@ -71,30 +59,26 @@ class _ThingPageState extends State<ThingPage> {
     );
   }
 
-  FutureBuilder<ConsumedThing> get _affordanceWidgets => FutureBuilder(
-        future: _consumedThing,
-        builder: (BuildContext context, AsyncSnapshot<ConsumedThing> snapshot) {
-          if (snapshot.hasData) {
-            return Column(
-              children: _interactionAffordances.entries
-                  .map(
-                    (property) => AffordanceWidget.create(
-                      snapshot.data!,
-                      property.value,
-                      property.key,
-                    ),
-                  )
-                  .toList(),
-            );
-          }
+  Widget get _affordanceWidgets {
+    final consumedThing =
+        ref.watch(consumedThingProvider(widget._thingDescription));
 
-          if (snapshot.hasError) {
-            throw snapshot.error!;
-          }
-
-          return const CircularProgressIndicator();
-        },
-      );
+    return switch (consumedThing) {
+      AsyncData(:final value) => Column(
+          children: _interactionAffordances.entries
+              .map(
+                (property) => AffordanceWidget.create(
+                  value,
+                  property.value,
+                  property.key,
+                ),
+              )
+              .toList(),
+        ),
+      AsyncError(:final error) => throw error,
+      _ => const CircularProgressIndicator(),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {

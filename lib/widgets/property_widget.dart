@@ -18,7 +18,7 @@ final class PropertyWidget extends AffordanceWidget {
   final Property _interactionAffordance;
 
   @override
-  State<StatefulWidget> createState() => _PropertyState();
+  ConsumerState<PropertyWidget> createState() => _PropertyState();
 }
 
 final class _PropertyState extends _AffordanceState<PropertyWidget> {
