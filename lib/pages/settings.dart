@@ -4,7 +4,6 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/main.dart';
 import 'package:eclipse_thingweb_app/providers/settings_provider.dart';
 import 'package:eclipse_thingweb_app/widgets/input_form.dart';
 import 'package:flutter/material.dart';
@@ -39,10 +38,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final discoveryUrl =
-        ref.watch(stringPreferencesProvider(discoveryUrlSettingsKey));
-    final discoveryMethod =
-        ref.watch(stringPreferencesProvider(discoveryMethodSettingsKey));
+    final discoveryUrl = ref.watch(discoverUrlProvider);
+    final discoveryMethod = ref.watch(discoverMethodProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -63,9 +60,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 },
                 leading: const Icon(Icons.link),
                 onPressed: (BuildContext context) async {
-                  final currentValue = await ref.read(
-                      stringPreferencesProvider(discoveryUrlSettingsKey)
-                          .future);
+                  final currentValue =
+                      await ref.read(discoverUrlProvider.future);
 
                   final result = await _openDialog(
                     "Enter a Discovery URL",
@@ -81,9 +77,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     },
                   );
 
-                  final notifier = ref.read(
-                      stringPreferencesProvider(discoveryUrlSettingsKey)
-                          .notifier);
+                  final notifier = ref.read(discoverUrlProvider.notifier);
 
                   if (result == null) {
                     notifier.remove();
@@ -101,9 +95,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       style: Theme.of(context).textTheme.bodyMedium,
                       value: value,
                       onChanged: (String? newValue) async {
-                        final notifier = ref.read(stringPreferencesProvider(
-                                discoveryMethodSettingsKey)
-                            .notifier);
+                        final notifier =
+                            ref.read(discoverMethodProvider.notifier);
 
                         if (newValue != null) {
                           await notifier.write(newValue);

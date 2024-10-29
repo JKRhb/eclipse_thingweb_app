@@ -18,11 +18,6 @@ import 'package:go_router/go_router.dart';
 import 'pages/home.dart';
 import 'pages/settings.dart';
 
-const discoveryMethodSettingsKey = "discovery-method-key";
-const discoveryUrlSettingsKey = "discovery-url-key";
-
-const defaultDiscoveryMethod = "Direct";
-
 final wotProvider = FutureProvider.autoDispose((ref) async {
   final servient = Servient.create(clientFactories: [
     CoapClientFactory(),

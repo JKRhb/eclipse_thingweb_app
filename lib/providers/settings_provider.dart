@@ -4,7 +4,6 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,6 +18,16 @@ class BooleanPreferenceNotifier extends FamilyAsyncNotifier<bool?, String> {
   Future<bool?> build(String arg) async {
     return preferences.getBool(arg);
   }
+
+  Future<void> remove() async {
+    await preferences.remove(arg);
+    state = const AsyncData(null);
+  }
+
+  Future<void> write(bool value) async {
+    await preferences.setBool(arg, value);
+    state = AsyncData(value);
+  }
 }
 
 final doublePreferencesProvider =
@@ -30,6 +39,16 @@ class DoublePreferenceNotifier extends FamilyAsyncNotifier<double?, String> {
   Future<double?> build(String arg) async {
     return preferences.getDouble(arg);
   }
+
+  Future<void> remove() async {
+    await preferences.remove(arg);
+    state = const AsyncData(null);
+  }
+
+  Future<void> write(double value) async {
+    await preferences.setDouble(arg, value);
+    state = AsyncData(value);
+  }
 }
 
 final integerPreferencesProvider =
@@ -40,6 +59,16 @@ class IntegerPreferenceNotifier extends FamilyAsyncNotifier<int?, String> {
   @override
   Future<int?> build(String arg) async {
     return preferences.getInt(arg);
+  }
+
+  Future<void> remove() async {
+    await preferences.remove(arg);
+    state = const AsyncData(null);
+  }
+
+  Future<void> write(int value) async {
+    await preferences.setInt(arg, value);
+    state = AsyncData(value);
   }
 }
 
@@ -54,15 +83,13 @@ class StringPreferenceNotifier extends FamilyAsyncNotifier<String?, String> {
   }
 
   Future<void> remove() async {
-    // TODO: Refactor
     await preferences.remove(arg);
     state = const AsyncData(null);
   }
 
-  Future<void> write(String result) async {
-    // TODO: Refactor
-    await preferences.setString(arg, result);
-    state = AsyncData(result);
+  Future<void> write(String value) async {
+    await preferences.setString(arg, value);
+    state = AsyncData(value);
   }
 }
 
@@ -77,6 +104,16 @@ class StringListPreferenceNotifier
   Future<List<String>?> build(String arg) async {
     return preferences.getStringList(arg);
   }
+
+  Future<void> remove() async {
+    await preferences.remove(arg);
+    state = const AsyncData(null);
+  }
+
+  Future<void> write(List<String> value) async {
+    await preferences.setStringList(arg, value);
+    state = AsyncData(value);
+  }
 }
 
 typedef DiscoveryPreferences = ({
@@ -84,12 +121,15 @@ typedef DiscoveryPreferences = ({
   String? discoveryMethod,
 });
 
+final discoverMethodProvider =
+    stringPreferencesProvider("discovery-method-key");
+
+final discoverUrlProvider = stringPreferencesProvider("discovery-url-key");
+
 final discoverySettingsProvider =
     FutureProvider.autoDispose<DiscoveryPreferences>((ref) async {
-  final discoveryUrl = await ref
-      .watch(stringPreferencesProvider(discoveryUrlSettingsKey).future);
-  final discoveryMethod = await ref
-      .watch(stringPreferencesProvider(discoveryMethodSettingsKey).future);
+  final discoveryUrl = await ref.watch(discoverUrlProvider.future);
+  final discoveryMethod = await ref.watch(discoverMethodProvider.future);
 
   return (discoveryUrl: discoveryUrl, discoveryMethod: discoveryMethod);
 });
