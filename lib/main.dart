@@ -89,7 +89,7 @@ class WotApp extends StatelessWidget {
           ),
           GoRoute(
             path: "/settings",
-            builder: (context, state) => SettingsPage(_preferences),
+            builder: (context, state) => const SettingsPage(),
           ),
           GoRoute(
             path: "/events",

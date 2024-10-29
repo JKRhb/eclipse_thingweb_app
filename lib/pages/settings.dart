@@ -5,38 +5,23 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import 'package:eclipse_thingweb_app/main.dart';
+import 'package:eclipse_thingweb_app/providers/settings_provider.dart';
 import 'package:eclipse_thingweb_app/widgets/input_form.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage(
-    this._preferencesAsync, {
+class SettingsPage extends ConsumerStatefulWidget {
+  const SettingsPage({
     super.key,
   });
 
-  final SharedPreferencesAsync _preferencesAsync;
-
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage> {
   _SettingsPageState();
-
-  late Future<String?> _discoveryMethod;
-
-  late Future<String?> _discoveryUrl;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _discoveryMethod =
-        widget._preferencesAsync.getString(discoveryMethodSettingsKey);
-    _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
-  }
 
   static String _formatDiscoveryUrl(String? discoveryUrl) {
     const maxUrlLength = 20;
@@ -54,6 +39,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final discoveryUrl =
+        ref.watch(stringPreferencesProvider(discoveryUrlSettingsKey));
+    final discoveryMethod =
+        ref.watch(stringPreferencesProvider(discoveryMethodSettingsKey));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
@@ -66,31 +56,16 @@ class _SettingsPageState extends State<SettingsPage> {
             tiles: [
               SettingsTile(
                 title: const Text('Discovery URL'),
-                trailing: FutureBuilder(
-                  future: _discoveryUrl,
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    } else {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-
-                      final currentDiscoveryUrl = snapshot.data;
-                      final formattedDiscoveryUrl =
-                          _formatDiscoveryUrl(currentDiscoveryUrl);
-
-                      return Text(formattedDiscoveryUrl);
-                    }
-                  },
-                ),
+                trailing: switch (discoveryUrl) {
+                  AsyncData(:final value) => Text(_formatDiscoveryUrl(value)),
+                  AsyncError(:final error) => Text('Error occurred: $error'),
+                  _ => const CircularProgressIndicator(),
+                },
                 leading: const Icon(Icons.link),
                 onPressed: (BuildContext context) async {
-                  final currentValue = await widget._preferencesAsync
-                      .getString(discoveryUrlSettingsKey);
+                  final currentValue = await ref.read(
+                      stringPreferencesProvider(discoveryUrlSettingsKey)
+                          .future);
 
                   final result = await _openDialog(
                     "Enter a Discovery URL",
@@ -106,79 +81,49 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   );
 
-                  if (result == null) {
-                    await widget._preferencesAsync
-                        .remove(discoveryUrlSettingsKey);
+                  final notifier = ref.read(
+                      stringPreferencesProvider(discoveryUrlSettingsKey)
+                          .notifier);
 
-                    setState(() {
-                      _discoveryUrl = Future.value(null);
-                    });
+                  if (result == null) {
+                    notifier.remove();
                     return;
                   }
 
-                  await widget._preferencesAsync.setString(
-                    discoveryUrlSettingsKey,
-                    result,
-                  );
-
-                  setState(() {
-                    _discoveryUrl = Future.value(result);
-                  });
+                  notifier.write(result);
                 },
               ),
               SettingsTile(
                 title: const Text('Discovery Method'),
                 leading: const Icon(Icons.language),
-                trailing: FutureBuilder(
-                  future: _discoveryMethod,
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    } else {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
+                trailing: switch (discoveryMethod) {
+                  AsyncData(:final value) => DropdownButton<String>(
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      value: value,
+                      onChanged: (String? newValue) async {
+                        final notifier = ref.read(stringPreferencesProvider(
+                                discoveryMethodSettingsKey)
+                            .notifier);
 
-                      final currentDiscoveryMethod = snapshot.data;
+                        if (newValue != null) {
+                          await notifier.write(newValue);
 
-                      return DropdownButton<String>(
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        value: currentDiscoveryMethod,
-                        onChanged: (String? newValue) async {
-                          if (newValue == null) {
-                            await widget._preferencesAsync
-                                .remove(discoveryMethodSettingsKey);
+                          return;
+                        }
 
-                            setState(() {
-                              _discoveryMethod =
-                                  Future.value(defaultDiscoveryMethod);
-                            });
-                            return;
-                          }
-
-                          await widget._preferencesAsync.setString(
-                            discoveryMethodSettingsKey,
-                            newValue,
-                          );
-
-                          setState(() {
-                            _discoveryMethod = Future.value(newValue);
-                          });
-                        },
-                        items: <String>['Direct', 'Directory']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      );
-                    }
-                  },
-                ),
+                        await notifier.remove();
+                      },
+                      items: <String>['Direct', 'Directory']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ), //=> Text(_formatDiscoveryUrl(value)),
+                  AsyncError(:final error) => Text('Error occurred: $error'),
+                  _ => const CircularProgressIndicator(),
+                },
               ),
             ],
           ),
