@@ -197,7 +197,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: ListTile(
                   title: Text(thingDescription.title),
                   subtitle: description != null ? Text(description) : null,
-                  leading: const Icon(Icons.electric_bolt),
+                  // TODO: Use a network icon here.
+                  leading: const Icon(Icons.devices_other),
                   onTap: () async {
                     if (!context.mounted) {
                       return;
