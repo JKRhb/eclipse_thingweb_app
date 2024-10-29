@@ -49,7 +49,7 @@ class EventsPageState extends ConsumerState<EventsPage> {
         child: Column(
           children: events.reversed
               .map(
-                // TODO: Allow for deleting invidual events etc.
+                // TODO: Allow for deleting individual events etc.
                 (eventNotification) => Card(
                   child: ListTile(
                     onTap: () {

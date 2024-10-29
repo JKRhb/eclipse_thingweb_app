@@ -14,7 +14,6 @@ import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/home.dart';
 import 'pages/settings.dart';
@@ -42,21 +41,15 @@ final consumedThingProvider = FutureProvider.autoDispose
 });
 
 Future<void> main() async {
-  final preferences = SharedPreferencesAsync();
-
   runApp(
-    ProviderScope(
-      child: WotApp(
-        preferences,
-      ),
+    const ProviderScope(
+      child: WotApp(),
     ),
   );
 }
 
 class WotApp extends StatelessWidget {
-  const WotApp(this._preferences, {super.key});
-
-  final SharedPreferencesAsync _preferences;
+  const WotApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -82,8 +75,7 @@ class WotApp extends StatelessWidget {
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => HomePage(
-              _preferences,
+            builder: (context, state) => const HomePage(
               title: title,
             ),
           ),

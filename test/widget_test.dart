@@ -9,14 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:eclipse_thingweb_app/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    final preferences = SharedPreferencesAsync();
-
     // Build our app and trigger a frame.
-    await tester.pumpWidget(WotApp(preferences));
+    await tester.pumpWidget(const WotApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

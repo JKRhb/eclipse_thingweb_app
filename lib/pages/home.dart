@@ -13,16 +13,14 @@ import 'package:eclipse_thingweb_app/widgets/notifications_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../providers/settings_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
-  const HomePage(
-    this._preferencesAsync, {
+  const HomePage({
     super.key,
     required this.title,
   });
-
-  final SharedPreferencesAsync _preferencesAsync;
 
   final String title;
 
@@ -30,23 +28,7 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-typedef _DiscoveryPreferences = ({
-  String? discoveryUrl,
-  String? discoveryMethod,
-});
-
 class _HomePageState extends ConsumerState<HomePage> {
-  Future<_DiscoveryPreferences> get _discoveryPreferences async {
-    final preferences = widget._preferencesAsync;
-
-    return (
-      discoveryUrl: await preferences.getString(discoveryUrlSettingsKey),
-      discoveryMethod:
-          (await preferences.getString(discoveryMethodSettingsKey) ??
-              defaultDiscoveryMethod),
-    );
-  }
-
   void _registerThingDescription(ThingDescription thingDescription) {
     ref
         .read(thingDescriptionProvider.notifier)
@@ -54,7 +36,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _startDiscovery(
-      BuildContext context, _DiscoveryPreferences discoveryPreferences) async {
+      BuildContext context, DiscoveryPreferences discoveryPreferences) async {
     final wot = await ref.watch(wotProvider.future);
 
     final (:discoveryUrl, :discoveryMethod) = discoveryPreferences;
@@ -120,28 +102,22 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final thingDescriptions = ref.watch(thingDescriptionProvider);
+    final discoverySettings = ref.watch(discoverySettingsProvider);
+
+    const discoveryButtonIcon = Icon(Icons.travel_explore);
 
     return Scaffold(
-      floatingActionButton: FutureBuilder(
-        // TODO: Turn into provider
-        future: _discoveryPreferences,
-        builder: (context, snapshot) {
-          const icon = Icon(Icons.travel_explore);
-          const disabledButton =
-              FloatingActionButton(onPressed: null, child: icon);
-
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              snapshot.hasError) {
-            return disabledButton;
-          }
-
-          return FloatingActionButton(
-            tooltip: 'Discover TDs',
-            onPressed: () => _startDiscovery(context, snapshot.data!),
-            child: icon,
-          );
-        },
-      ),
+      floatingActionButton: switch (discoverySettings) {
+        AsyncData(:final value) => FloatingActionButton(
+            onPressed: () => _startDiscovery(context, value),
+            child: discoveryButtonIcon,
+          ),
+        AsyncError() => const FloatingActionButton(
+            onPressed: null,
+            child: discoveryButtonIcon,
+          ),
+        _ => const CircularProgressIndicator(),
+      },
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: Theme.of(context).primaryColor,
@@ -163,13 +139,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          final discoveryPreferences = await _discoveryPreferences;
+          final discoverySettings =
+              await ref.watch(discoverySettingsProvider.future);
 
           if (!context.mounted) {
             return;
           }
 
-          _startDiscovery(context, discoveryPreferences);
+          _startDiscovery(context, discoverySettings);
         },
         child: ListView(
           children: thingDescriptions.map(

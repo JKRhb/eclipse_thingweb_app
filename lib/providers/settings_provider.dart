@@ -4,6 +4,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'package:eclipse_thingweb_app/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,3 +78,18 @@ class StringListPreferenceNotifier
     return preferences.getStringList(arg);
   }
 }
+
+typedef DiscoveryPreferences = ({
+  String? discoveryUrl,
+  String? discoveryMethod,
+});
+
+final discoverySettingsProvider =
+    FutureProvider.autoDispose<DiscoveryPreferences>((ref) async {
+  final discoveryUrl = await ref
+      .watch(stringPreferencesProvider(discoveryUrlSettingsKey).future);
+  final discoveryMethod = await ref
+      .watch(stringPreferencesProvider(discoveryMethodSettingsKey).future);
+
+  return (discoveryUrl: discoveryUrl, discoveryMethod: discoveryMethod);
+});
