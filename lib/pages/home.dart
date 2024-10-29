@@ -9,6 +9,7 @@ import 'package:eclipse_thingweb_app/main.dart';
 import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart';
 import 'package:eclipse_thingweb_app/providers/thing_description_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
+import 'package:eclipse_thingweb_app/widgets/notifications_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -111,22 +112,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  static AlignmentGeometry _positionBadge(int notificationsCount) {
-    if (notificationsCount > 999) {
-      return AlignmentDirectional.topStart;
-    }
-
-    return AlignmentDirectional.topEnd;
-  }
+  int get _numberOfUnreadNotifications => ref
+      .watch(eventNotificationProvider)
+      .where((eventNotification) => !eventNotification.read)
+      .length;
 
   @override
   Widget build(BuildContext context) {
     final thingDescriptions = ref.watch(thingDescriptionProvider);
-
-    final eventNotifications = ref.watch(eventNotificationProvider);
-    final numberOfUnreadNotifications = eventNotifications
-        .where((eventNotification) => !eventNotification.read)
-        .length;
 
     return Scaffold(
       floatingActionButton: FutureBuilder(
@@ -154,20 +147,10 @@ class _HomePageState extends ConsumerState<HomePage> {
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
-          IconButton(
-            icon: Badge.count(
-              count: numberOfUnreadNotifications,
-              alignment: _positionBadge(numberOfUnreadNotifications),
-              // TODO: Add filter for seen or unseen
-              isLabelVisible: numberOfUnreadNotifications > 0,
-              child: const Icon(Icons.notifications),
-            ),
+          NotificationsBadge(
+            _numberOfUnreadNotifications,
             onPressed: () {
               context.push("/events");
-              // final eventNotificationNotifier =
-              //     ref.read(eventNotificationProvider.notifier);
-
-              // eventNotificationNotifier.markAllAsRead();
             },
           ),
           IconButton(
