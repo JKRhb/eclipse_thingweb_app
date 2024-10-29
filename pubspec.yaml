@@ -18,6 +18,7 @@ dependencies:
   flutter_settings_ui: ^3.0.1
   shared_preferences: ^2.3.2
   flex_seed_scheme: ^3.4.1
+  flutter_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.1
