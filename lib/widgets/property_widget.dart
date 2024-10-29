@@ -144,20 +144,27 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
   }
 
   @override
-  List<Widget> get _cardButtons => [
-        if (!_property.writeOnly)
-          IconButton(
-            onPressed: _readValue,
-            icon: const Icon(Icons.download),
+  List<Widget> get _cardButtons {
+    final observeButtonTooltip =
+        "${!_observing ? "Start" : "Stop"} observing this property";
+
+    return [
+      if (!_property.writeOnly)
+        IconButton(
+          onPressed: _readValue,
+          tooltip: "Retrieve the latest property value",
+          icon: const Icon(Icons.refresh),
+        ),
+      if (_property.observable)
+        IconButton(
+          onPressed: _toggleObserve,
+          tooltip: observeButtonTooltip,
+          icon: Icon(
+            !_observing ? Icons.remove_red_eye : Icons.cancel,
           ),
-        if (_property.observable)
-          IconButton(
-            onPressed: _toggleObserve,
-            icon: Icon(
-              !_observing ? Icons.play_arrow : Icons.stop,
-            ),
-          ),
-      ];
+        ),
+    ];
+  }
 }
 
 class _PropertyVisualization extends StatelessWidget {
