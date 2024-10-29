@@ -6,7 +6,6 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// TODO: Evaluate whether the family approach is the correct one here.
 final affordanceStateProvider = StateNotifierProvider.family<
     AffordanceState,
     Object?,
