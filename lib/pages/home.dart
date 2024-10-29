@@ -121,12 +121,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    List<ThingDescription> thingDescriptions =
-        ref.watch(thingDescriptionProvider);
+    final thingDescriptions = ref.watch(thingDescriptionProvider);
 
-    List<EventNotification> eventNotifications =
-        ref.watch(eventNotificationProvider);
-    final eventNotificationCount = eventNotifications.length;
+    final eventNotifications = ref.watch(eventNotificationProvider);
+    final numberOfUnreadNotifications = eventNotifications
+        .where((eventNotification) => !eventNotification.read)
+        .length;
 
     return Scaffold(
       floatingActionButton: FutureBuilder(
@@ -156,13 +156,19 @@ class _HomePageState extends ConsumerState<HomePage> {
         actions: [
           IconButton(
             icon: Badge.count(
-              count: eventNotificationCount,
-              alignment: _positionBadge(eventNotificationCount),
+              count: numberOfUnreadNotifications,
+              alignment: _positionBadge(numberOfUnreadNotifications),
               // TODO: Add filter for seen or unseen
-              isLabelVisible: eventNotificationCount > 0,
+              isLabelVisible: numberOfUnreadNotifications > 0,
               child: const Icon(Icons.notifications),
             ),
-            onPressed: () {},
+            onPressed: () {
+              context.push("/events");
+              // final eventNotificationNotifier =
+              //     ref.read(eventNotificationProvider.notifier);
+
+              // eventNotificationNotifier.markAllAsRead();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.settings),

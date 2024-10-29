@@ -46,13 +46,14 @@ class _ThingPageState extends ConsumerState<ThingPage> {
   // TODO: Improve formatting.
   Card get _metadataWidget {
     final id = widget._thingDescription.id;
+    final description = widget._thingDescription.description;
     return Card(
       child: Column(
         children: [
-          ListTile(
-            title: Text(widget._thingDescription.title),
-            subtitle: Text(widget._thingDescription.description ?? ""),
-          ),
+          if (description != null)
+            ListTile(
+              subtitle: Text(description),
+            ),
           if (id != null) Text("ID: $id"),
         ],
       ),

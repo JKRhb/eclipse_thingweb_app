@@ -4,18 +4,35 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'package:dart_wot/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EventNotification {
   EventNotification({
     required this.data,
+    required this.thingDescription,
+    this.read = false,
   }) : id = _nextId++;
+
+  EventNotification copy({
+    bool read = false,
+  }) {
+    return EventNotification(
+      data: data,
+      thingDescription: thingDescription,
+      read: read,
+    );
+  }
 
   final int id;
 
   static int _nextId = 0;
 
-  Object? data;
+  final Object? data;
+
+  final bool read;
+
+  final ThingDescription thingDescription;
 }
 
 class _EventNotificationNotifier extends Notifier<List<EventNotification>> {
@@ -36,6 +53,12 @@ class _EventNotificationNotifier extends Notifier<List<EventNotification>> {
 
   void clear() {
     state = [];
+  }
+
+  void markAllAsRead() {
+    state = [
+      for (final eventNotification in state) eventNotification.copy(read: true),
+    ];
   }
 }
 

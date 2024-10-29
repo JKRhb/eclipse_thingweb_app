@@ -43,7 +43,18 @@ final class _EventState extends _AffordanceState<EventWidget> {
     }
 
     await subscriptionState.addSubscriptionState(
-        widget._consumedThing, widget._affordanceKey);
+      widget._consumedThing,
+      widget._affordanceKey,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    displaySuccessMessageSnackbar(
+      context,
+      "Subscribed to Event: ${widget._interactionAffordance.title ?? widget._affordanceKey}",
+    );
   }
 
   @override

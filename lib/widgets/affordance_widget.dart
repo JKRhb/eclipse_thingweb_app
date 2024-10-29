@@ -91,6 +91,7 @@ abstract base class _AffordanceState<T extends AffordanceWidget>
           _cardHeader,
           ..._cardBody,
           OverflowBar(
+            alignment: MainAxisAlignment.end,
             children: _cardButtons,
           ),
         ],

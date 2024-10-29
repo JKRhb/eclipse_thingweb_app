@@ -46,20 +46,22 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
           .isNotEmpty;
 
   Future<void> addSubscriptionState(
-      ConsumedThing consumedThing, String affordanceKey) async {
+    ConsumedThing consumedThing,
+    String affordanceKey, {
+    void Function(Object? value)? subscriptionCallback,
+  }) async {
     final subscription = await consumedThing.subscribeEvent(affordanceKey,
         (interactionOutput) async {
       final value = await interactionOutput.value();
 
-      ref
-          .read(eventNotificationProvider.notifier)
-          .addEventNotification(EventNotification(data: value));
+      ref.read(eventNotificationProvider.notifier).addEventNotification(
+            EventNotification(
+              data: value,
+              thingDescription: consumedThing.thingDescription,
+            ),
+          );
 
-      // TODO: Handle event data more elegantly
-      // displaySuccessMessageSnackbar(
-      //   context,
-      //   "Received Event: $value",
-      // );
+      subscriptionCallback?.call(value);
     });
 
     state = [
@@ -78,7 +80,6 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
   ) async {
     final result = <SubscriptionState>[];
 
-    // state = [
     for (final subscriptionState in state) {
       if (subscriptionState.thingDescriptionId != thingDescriptionId &&
           subscriptionState.subscriptionType != subscriptionType &&
