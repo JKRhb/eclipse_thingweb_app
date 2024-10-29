@@ -26,7 +26,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   bool _observing = false;
 
-  Object? _lastValue;
+  // Object? _lastValue;
 
   ConsumedThing get consumedThing => widget._consumedThing;
 
@@ -68,9 +68,20 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
         _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
       }
 
-      setState(() {
-        _lastValue = value;
-      });
+      ref
+          .read(
+            affordanceStateProvider(
+              (
+                affordanceKey: widget._affordanceKey,
+                thingDescriptionId: widget._consumedThing.thingDescription.id!,
+              ),
+            ).notifier,
+          )
+          .update(value);
+
+      // setState(() {
+      //   _lastValue = value;
+      // });
     } on Exception catch (exception) {
       if (!mounted) {
         return;
@@ -106,9 +117,9 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
           _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
         }
 
-        setState(() {
-          _lastValue = value;
-        });
+        // setState(() {
+        //   _lastValue = value;
+        // });
       },
     );
   }
@@ -116,15 +127,24 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
   bool get isNumericDataType => ["integer", "number"].contains(_property.type);
 
   @override
-  List<Widget> get _cardBody => [
-        Container(
-          padding: const EdgeInsets.all(16.0),
-          alignment: Alignment.centerLeft,
-          child: Text(_lastValue != null ? "Current value: $_lastValue" : ""),
-        ),
-        if (isNumericDataType && _dataWindow.isNotEmpty)
-          _PropertyVisualization(_property, _dataWindow),
-      ];
+  List<Widget> get _cardBody {
+    final value = ref.watch(
+      affordanceStateProvider((
+        affordanceKey: widget._affordanceKey,
+        thingDescriptionId: widget._consumedThing.thingDescription.id!,
+      )),
+    );
+
+    return [
+      Container(
+        padding: const EdgeInsets.all(16.0),
+        alignment: Alignment.centerLeft,
+        child: Text(value != null ? "Current value: $value" : ""),
+      ),
+      if (isNumericDataType && _dataWindow.isNotEmpty)
+        _PropertyVisualization(_property, _dataWindow),
+    ];
+  }
 
   @override
   List<Widget> get _cardButtons => [

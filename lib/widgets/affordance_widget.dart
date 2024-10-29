@@ -7,6 +7,7 @@
 import 'package:dart_wot/core.dart';
 import 'package:dart_wot/core.dart' as dart_wot;
 import 'package:eclipse_thingweb_app/providers/subscription_provider.dart';
+import 'package:eclipse_thingweb_app/providers/thing_state_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
 import 'package:flutter/material.dart';
 
