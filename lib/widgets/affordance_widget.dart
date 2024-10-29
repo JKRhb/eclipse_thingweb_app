@@ -89,11 +89,11 @@ abstract base class _AffordanceState<T extends AffordanceWidget>
       child: Column(
         children: [
           _cardHeader,
-          ..._cardBody,
           OverflowBar(
             alignment: MainAxisAlignment.end,
             children: _cardButtons,
           ),
+          ..._cardBody,
         ],
       ),
     );

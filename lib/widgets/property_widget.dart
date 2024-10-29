@@ -26,8 +26,6 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   bool _observing = false;
 
-  // Object? _lastValue;
-
   ConsumedThing get consumedThing => widget._consumedThing;
 
   final List<(int, double)> _data = [];
@@ -59,6 +57,19 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
     super.dispose();
   }
 
+  void _updateValue(Object? value) {
+    ref
+        .read(
+          affordanceStateProvider(
+            (
+              affordanceKey: widget._affordanceKey,
+              thingDescriptionId: widget._consumedThing.thingDescription.id!,
+            ),
+          ).notifier,
+        )
+        .update(value);
+  }
+
   Future<void> _readValue() async {
     try {
       final output = await consumedThing.readProperty(_propertyKey);
@@ -68,20 +79,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
         _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
       }
 
-      ref
-          .read(
-            affordanceStateProvider(
-              (
-                affordanceKey: widget._affordanceKey,
-                thingDescriptionId: widget._consumedThing.thingDescription.id!,
-              ),
-            ).notifier,
-          )
-          .update(value);
-
-      // setState(() {
-      //   _lastValue = value;
-      // });
+      _updateValue(value);
     } on Exception catch (exception) {
       if (!mounted) {
         return;
@@ -117,9 +115,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
           _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
         }
 
-        // setState(() {
-        //   _lastValue = value;
-        // });
+        _updateValue(value);
       },
     );
   }
@@ -136,11 +132,12 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
     );
 
     return [
-      Container(
-        padding: const EdgeInsets.all(16.0),
-        alignment: Alignment.centerLeft,
-        child: Text(value != null ? "Current value: $value" : ""),
-      ),
+      if (value != null)
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          alignment: Alignment.centerLeft,
+          child: Text("Current value: $value"),
+        ),
       if (isNumericDataType && _dataWindow.isNotEmpty)
         _PropertyVisualization(_property, _dataWindow),
     ];
@@ -180,52 +177,58 @@ class _PropertyVisualization extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 2.0,
-      child: LineChart(
-        LineChartData(
-          minY: _property.minimum?.toDouble(),
-          maxY: _property.maximum?.toDouble(),
-          clipData: const FlClipData.all(),
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(
-              axisNameWidget: const Text('Time'),
-              axisNameSize: 24,
-              sideTitles: SideTitles(
-                showTitles: true,
-                // FIXME: This is still not that great
-                interval: const Duration(seconds: 60).inMilliseconds.toDouble(),
-                getTitlesWidget: (value, metaData) {
-                  final DateTime date =
-                      DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                  final parts = date.toIso8601String().split("T");
+    return ExpansionTile(
+      title: const Text('Data Visualization'),
+      children: [
+        AspectRatio(
+          aspectRatio: 2.0,
+          child: LineChart(
+            LineChartData(
+              minY: _property.minimum?.toDouble(),
+              maxY: _property.maximum?.toDouble(),
+              clipData: const FlClipData.all(),
+              titlesData: FlTitlesData(
+                bottomTitles: AxisTitles(
+                  axisNameWidget: const Text('Time'),
+                  axisNameSize: 24,
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    // FIXME: This is still not that great
+                    interval:
+                        const Duration(seconds: 60).inMilliseconds.toDouble(),
+                    getTitlesWidget: (value, metaData) {
+                      final DateTime date =
+                          DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                      final parts = date.toIso8601String().split("T");
 
-                  return SideTitleWidget(
-                    axisSide: AxisSide.bottom,
-                    child: Text(parts.first),
-                  );
-                },
+                      return SideTitleWidget(
+                        axisSide: AxisSide.bottom,
+                        child: Text(parts.first),
+                      );
+                    },
+                  ),
+                ),
+                topTitles: AxisTitles(
+                  axisNameWidget: axisTitle,
+                  axisNameSize: 24,
+                  sideTitles: const SideTitles(
+                    showTitles: false,
+                    reservedSize: 0,
+                  ),
+                ),
               ),
+              lineBarsData: [
+                LineChartBarData(
+                  show: true,
+                  isCurved: true,
+                  spots: _spots,
+                ),
+              ],
             ),
-            topTitles: AxisTitles(
-              axisNameWidget: axisTitle,
-              axisNameSize: 24,
-              sideTitles: const SideTitles(
-                showTitles: false,
-                reservedSize: 0,
-              ),
-            ),
+            duration: Duration.zero,
           ),
-          lineBarsData: [
-            LineChartBarData(
-              show: true,
-              isCurved: true,
-              spots: _spots,
-            ),
-          ],
         ),
-        duration: Duration.zero,
-      ),
+      ],
     );
   }
 }

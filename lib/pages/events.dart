@@ -7,6 +7,7 @@
 import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class EventsPage extends ConsumerStatefulWidget {
   const EventsPage({super.key});
@@ -16,6 +17,13 @@ class EventsPage extends ConsumerStatefulWidget {
 }
 
 class EventsPageState extends ConsumerState<EventsPage> {
+  void _markAllAsRead() {
+    final eventNotificationNotifier =
+        ref.read(eventNotificationProvider.notifier);
+
+    eventNotificationNotifier.markAllAsRead();
+  }
+
   @override
   Widget build(BuildContext context) {
     final events = ref.watch(eventNotificationProvider);
@@ -33,10 +41,7 @@ class EventsPageState extends ConsumerState<EventsPage> {
           onPressed: () {
             Navigator.of(context).pop();
 
-            final eventNotificationNotifier =
-                ref.read(eventNotificationProvider.notifier);
-
-            eventNotificationNotifier.markAllAsRead();
+            _markAllAsRead();
           },
         ),
       ),
@@ -44,14 +49,23 @@ class EventsPageState extends ConsumerState<EventsPage> {
         child: Column(
           children: events.reversed
               .map(
+                // TODO: Allow for deleting invidual events etc.
                 (eventNotification) => Card(
                   child: ListTile(
+                    onTap: () {
+                      context.push(
+                        "/thing",
+                        extra: eventNotification.thingDescription,
+                      );
+
+                      _markAllAsRead();
+                    },
                     title: const Text("Event"),
                     subtitle: Text(
                       "Value: ${eventNotification.data}",
                     ),
                     trailing:
-                        !eventNotification.read ? const Icon(Icons.abc) : null,
+                        !eventNotification.read ? const Text("New") : null,
                   ),
                 ),
               )
