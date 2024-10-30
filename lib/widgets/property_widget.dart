@@ -36,7 +36,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   // TODO: Refactor
   List<(int, double)> get _data {
-    final data = ref.read(affordanceStateHistoryProvider(_accessor));
+    final data = ref.watch(affordanceStateHistoryProvider(_accessor));
 
     if (data.isEmpty) {
       return [];
@@ -81,43 +81,6 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
     super.dispose();
   }
 
-  Future<void> _readValue() async {
-    try {
-      final output = await consumedThing.readProperty(_propertyKey);
-      final value = await output.value();
-
-      final accessor = (
-        affordanceKey: widget._affordanceKey,
-        thingDescriptionId: widget._consumedThing.thingDescription.id!,
-      );
-
-      if (value is num) {
-        ref.read(affordanceStateHistoryProvider(accessor).notifier).update(
-          (
-            DateTime.now().millisecondsSinceEpoch,
-            value.toDouble(),
-          ),
-        );
-      }
-
-      ref
-          .read(
-            affordanceStateProvider(accessor).notifier,
-          )
-          .update(value);
-    } on Exception catch (exception) {
-      if (!mounted) {
-        return;
-      }
-
-      displayErrorMessageSnackbar(
-        context,
-        "Reading value failed",
-        exception.toString(),
-      );
-    }
-  }
-
   Future<void> _toggleObserve() async {
     final subscriptionStateNotifier =
         ref.read(subscriptionStateProvider.notifier);
@@ -141,58 +104,93 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   bool get isNumericDataType => ["integer", "number"].contains(_property.type);
 
+  Widget get _readPropertyButton {
+    final isLoading = ref
+        .watch(readPropertyProvider((consumedThing, _propertyKey)))
+        .isLoading;
+
+    if (isLoading) {
+      return const IconButton(
+        onPressed: null,
+        icon: SizedBox(
+          height: 15,
+          width: 15,
+          child: CircularProgressIndicator(),
+        ),
+        tooltip: "Reading property...",
+      );
+    }
+
+    return IconButton(
+      onPressed: () =>
+          ref.refresh(readPropertyProvider((consumedThing, _propertyKey))),
+      tooltip: "Retrieve the latest property value",
+      icon: const Icon(Icons.refresh),
+    );
+  }
+
+  Widget get _currentValue {
+    final value =
+        ref.watch(readPropertyProvider((consumedThing, _propertyKey)));
+
+    return switch (value) {
+      AsyncError() => const Text('Failed to retrieve the property value.'),
+      AsyncData(:final value) => Text(value.toString()),
+      _ => LoadingAnimationWidget.staggeredDotsWave(
+          color: Colors.black,
+          size: 20,
+        ),
+    };
+  }
+
   @override
   List<Widget> get _cardBody {
-    final value = ref.watch(
-      affordanceStateProvider((
-        affordanceKey: widget._affordanceKey,
-        thingDescriptionId: widget._consumedThing.thingDescription.id!,
-      )),
-    );
+    final currentValue = _currentValue;
 
     return [
-      if (value != null)
-        Container(
-          padding: const EdgeInsets.all(16.0),
-          alignment: Alignment.centerLeft,
-          child: Text("Current value: $value"),
+      Container(
+        padding: const EdgeInsets.all(16.0),
+        alignment: Alignment.centerLeft,
+        child: Row(
+          children: [
+            const Text("Current value: "),
+            currentValue,
+          ],
         ),
+      ),
       if (isNumericDataType && _dataWindow.isNotEmpty)
         _PropertyVisualization(_property, _dataWindow),
     ];
   }
 
+  bool get _isSubscribed => ref
+          .watch(
+        subscriptionStateProvider,
+      )
+          .where(
+        (subscriptionState) {
+          return subscriptionState.thingDescriptionId ==
+                  widget._consumedThing.thingDescription.id! &&
+              subscriptionState.subscriptionType == SubscriptionType.property &&
+              subscriptionState.affordanceKey == _propertyKey;
+        },
+      ).isNotEmpty;
+
   @override
   List<Widget> get _cardButtons {
-    final subscribed = ref
-        .watch(
-      subscriptionStateProvider,
-    )
-        .where(
-      (subscriptionState) {
-        return subscriptionState.thingDescriptionId ==
-                widget._consumedThing.thingDescription.id! &&
-            subscriptionState.subscriptionType == SubscriptionType.property &&
-            subscriptionState.affordanceKey == _propertyKey;
-      },
-    ).isNotEmpty;
+    final isSubscribed = _isSubscribed;
 
     final observeButtonTooltip =
-        "${!subscribed ? "Start" : "Stop"} observing this property";
+        "${!isSubscribed ? "Start" : "Stop"} observing this property";
 
     return [
-      if (!_property.writeOnly)
-        IconButton(
-          onPressed: _readValue,
-          tooltip: "Retrieve the latest property value",
-          icon: const Icon(Icons.refresh),
-        ),
+      if (!_property.writeOnly) _readPropertyButton,
       if (_property.observable)
         IconButton(
           onPressed: _toggleObserve,
           tooltip: observeButtonTooltip,
           icon: Icon(
-            !subscribed ? Icons.remove_red_eye : Icons.cancel,
+            !isSubscribed ? Icons.remove_red_eye : Icons.cancel,
           ),
         ),
     ];

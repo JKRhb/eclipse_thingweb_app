@@ -6,44 +6,9 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final affordanceStateProvider = StateNotifierProvider.family<
-    AffordanceState,
-    Object?,
-    ({
-      String thingDescriptionId,
-      String affordanceKey,
-    })>(
-  (ref, parameters) {
-    final (:thingDescriptionId, :affordanceKey) = parameters;
-    return AffordanceState(
-      ref,
-      thingDescriptionId,
-      affordanceKey,
-    );
-  },
-);
-
-class AffordanceState extends StateNotifier<Object?> {
-  AffordanceState(
-    this.ref,
-    this.thingDescriptionId,
-    this.affordanceKey,
-  ) : super(null);
-
-  final String thingDescriptionId;
-
-  final String affordanceKey;
-
-  final Ref ref;
-
-  void update(Object? value) {
-    state = value;
-  }
-}
-
 final affordanceStateHistoryProvider = StateNotifierProvider.family<
     AffordanceHistoryState,
-    List<Object?>,
+    List<(int, Object?)>,
     ({
       String thingDescriptionId,
       String affordanceKey,
@@ -58,7 +23,7 @@ final affordanceStateHistoryProvider = StateNotifierProvider.family<
   },
 );
 
-class AffordanceHistoryState extends StateNotifier<List<Object?>> {
+class AffordanceHistoryState extends StateNotifier<List<(int, Object?)>> {
   AffordanceHistoryState(
     this.ref,
     this.thingDescriptionId,
@@ -72,6 +37,8 @@ class AffordanceHistoryState extends StateNotifier<List<Object?>> {
   final Ref ref;
 
   void update(Object? value) {
-    state = [...state, value];
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+    state = [...state, (timestamp, value)];
   }
 }

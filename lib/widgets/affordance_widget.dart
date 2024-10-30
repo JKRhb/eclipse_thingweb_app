@@ -6,6 +6,7 @@
 
 import 'package:dart_wot/core.dart';
 import 'package:dart_wot/core.dart' as dart_wot;
+import 'package:eclipse_thingweb_app/providers/interaction_provider.dart';
 import 'package:eclipse_thingweb_app/providers/subscription_provider.dart';
 import 'package:eclipse_thingweb_app/providers/affordance_state_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
@@ -15,6 +16,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 part "action_widget.dart";
 part "property_widget.dart";

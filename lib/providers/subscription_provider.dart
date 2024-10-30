@@ -81,29 +81,14 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
     final subscription = await consumedThing.observeProperty(affordanceKey,
         (interactionOutput) async {
       final value = await interactionOutput.value();
-      ref
-          .read(
-            affordanceStateProvider(
-              (
-                affordanceKey: affordanceKey,
-                thingDescriptionId: consumedThing.thingDescription.id!,
-              ),
-            ).notifier,
-          )
-          .update(value);
 
       if (value is num) {
         ref
             .read(affordanceStateHistoryProvider((
-          thingDescriptionId: consumedThing.thingDescription.id!,
-          affordanceKey: affordanceKey,
-        )).notifier)
-            .update(
-          (
-            DateTime.now().millisecondsSinceEpoch,
-            value.toDouble(),
-          ),
-        );
+              thingDescriptionId: consumedThing.thingDescription.id!,
+              affordanceKey: affordanceKey,
+            )).notifier)
+            .update(value.toDouble());
       }
     });
 
