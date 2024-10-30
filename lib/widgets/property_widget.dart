@@ -24,19 +24,47 @@ final class PropertyWidget extends AffordanceWidget {
 final class _PropertyState extends _AffordanceState<PropertyWidget> {
   _PropertyState();
 
-  bool _observing = false;
-
   ConsumedThing get consumedThing => widget._consumedThing;
 
-  final List<(int, double)> _data = [];
+  ({
+    String thingDescriptionId,
+    String affordanceKey,
+  }) get _accessor => (
+        affordanceKey: widget._affordanceKey,
+        thingDescriptionId: widget._consumedThing.thingDescription.id!,
+      );
+
+  // TODO: Refactor
+  List<(int, double)> get _data {
+    final data = ref.read(affordanceStateHistoryProvider(_accessor));
+
+    if (data.isEmpty) {
+      return [];
+    }
+
+    if (data is List<(int, double)>) {
+      return data;
+    }
+
+    final result = <(int, double)>[];
+
+    for (final dataPoint in data) {
+      if (dataPoint is (int, double)) {
+        result.add(dataPoint);
+      }
+    }
+
+    return result;
+  }
 
   int get _initialWindowIndex => max(0, _data.length - _maxElements);
 
   List<(int, double)> get _dataWindow {
     final result = <(int, double)>[];
+    final data = _data;
 
-    for (var i = _initialWindowIndex; i < _data.length; i++) {
-      result.add(_data[i]);
+    for (var i = _initialWindowIndex; i < data.length; i++) {
+      result.add(data[i]);
     }
 
     return result;
@@ -48,26 +76,9 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   final int _maxElements = 50;
 
-  Subscription? _subscription;
-
   @override
   void dispose() {
-    _subscription?.stop();
-    _subscription = null;
     super.dispose();
-  }
-
-  void _updateValue(Object? value) {
-    ref
-        .read(
-          affordanceStateProvider(
-            (
-              affordanceKey: widget._affordanceKey,
-              thingDescriptionId: widget._consumedThing.thingDescription.id!,
-            ),
-          ).notifier,
-        )
-        .update(value);
   }
 
   Future<void> _readValue() async {
@@ -75,11 +86,25 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
       final output = await consumedThing.readProperty(_propertyKey);
       final value = await output.value();
 
+      final accessor = (
+        affordanceKey: widget._affordanceKey,
+        thingDescriptionId: widget._consumedThing.thingDescription.id!,
+      );
+
       if (value is num) {
-        _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
+        ref.read(affordanceStateHistoryProvider(accessor).notifier).update(
+          (
+            DateTime.now().millisecondsSinceEpoch,
+            value.toDouble(),
+          ),
+        );
       }
 
-      _updateValue(value);
+      ref
+          .read(
+            affordanceStateProvider(accessor).notifier,
+          )
+          .update(value);
     } on Exception catch (exception) {
       if (!mounted) {
         return;
@@ -94,29 +119,23 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
   }
 
   Future<void> _toggleObserve() async {
-    if (_observing) {
-      await _subscription?.stop();
-    }
+    final subscriptionStateNotifier =
+        ref.read(subscriptionStateProvider.notifier);
 
-    setState(() {
-      _observing = !_observing;
-    });
+    final hasSubscription = subscriptionStateNotifier.hasSubscription(
+        consumedThing, SubscriptionType.property, _propertyKey);
 
-    if (!_observing) {
+    if (hasSubscription) {
+      subscriptionStateNotifier.removeSubscriptionState(
+          consumedThing.thingDescription.id!,
+          SubscriptionType.property,
+          _propertyKey);
       return;
     }
 
-    _subscription = await consumedThing.observeProperty(
+    subscriptionStateNotifier.addPropertySubscription(
+      consumedThing,
       _propertyKey,
-      (interactionOutput) async {
-        final value = await interactionOutput.value();
-
-        if (_subscription != null && value is num) {
-          _data.add((DateTime.now().millisecondsSinceEpoch, value.toDouble()));
-        }
-
-        _updateValue(value);
-      },
     );
   }
 
@@ -145,8 +164,21 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   @override
   List<Widget> get _cardButtons {
+    final subscribed = ref
+        .watch(
+      subscriptionStateProvider,
+    )
+        .where(
+      (subscriptionState) {
+        return subscriptionState.thingDescriptionId ==
+                widget._consumedThing.thingDescription.id! &&
+            subscriptionState.subscriptionType == SubscriptionType.property &&
+            subscriptionState.affordanceKey == _propertyKey;
+      },
+    ).isNotEmpty;
+
     final observeButtonTooltip =
-        "${!_observing ? "Start" : "Stop"} observing this property";
+        "${!subscribed ? "Start" : "Stop"} observing this property";
 
     return [
       if (!_property.writeOnly)
@@ -160,7 +192,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
           onPressed: _toggleObserve,
           tooltip: observeButtonTooltip,
           icon: Icon(
-            !_observing ? Icons.remove_red_eye : Icons.cancel,
+            !subscribed ? Icons.remove_red_eye : Icons.cancel,
           ),
         ),
     ];

@@ -42,7 +42,7 @@ final class _EventState extends _AffordanceState<EventWidget> {
       return;
     }
 
-    await subscriptionState.addSubscriptionState(
+    await subscriptionState.addEventSubscription(
       widget._consumedThing,
       widget._affordanceKey,
     );

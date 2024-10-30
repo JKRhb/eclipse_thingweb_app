@@ -7,6 +7,7 @@
 import 'package:dart_wot/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'affordance_state_provider.dart';
 import 'event_notifications_provider.dart';
 
 class SubscriptionState {
@@ -45,7 +46,7 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
               subscriptionState.affordanceKey == affordanceKey)
           .isNotEmpty;
 
-  Future<void> addSubscriptionState(
+  Future<void> addEventSubscription(
     ConsumedThing consumedThing,
     String affordanceKey, {
     void Function(Object? value)? subscriptionCallback,
@@ -69,6 +70,48 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
       SubscriptionState(subscription,
           thingDescriptionId: consumedThing.thingDescription.id!,
           subscriptionType: SubscriptionType.event,
+          affordanceKey: affordanceKey)
+    ];
+  }
+
+  Future<void> addPropertySubscription(
+    ConsumedThing consumedThing,
+    String affordanceKey,
+  ) async {
+    final subscription = await consumedThing.observeProperty(affordanceKey,
+        (interactionOutput) async {
+      final value = await interactionOutput.value();
+      ref
+          .read(
+            affordanceStateProvider(
+              (
+                affordanceKey: affordanceKey,
+                thingDescriptionId: consumedThing.thingDescription.id!,
+              ),
+            ).notifier,
+          )
+          .update(value);
+
+      if (value is num) {
+        ref
+            .read(affordanceStateHistoryProvider((
+          thingDescriptionId: consumedThing.thingDescription.id!,
+          affordanceKey: affordanceKey,
+        )).notifier)
+            .update(
+          (
+            DateTime.now().millisecondsSinceEpoch,
+            value.toDouble(),
+          ),
+        );
+      }
+    });
+
+    state = [
+      ...state,
+      SubscriptionState(subscription,
+          thingDescriptionId: consumedThing.thingDescription.id!,
+          subscriptionType: SubscriptionType.property,
           affordanceKey: affordanceKey)
     ];
   }
