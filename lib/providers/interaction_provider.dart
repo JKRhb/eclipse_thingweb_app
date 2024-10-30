@@ -21,6 +21,33 @@ final readPropertyProvider = FutureProvider.autoDispose
         (
           thingDescriptionId: consumedThing.thingDescription.id!,
           affordanceKey: propertyName,
+          affordanceType: "Property",
+        ),
+      ).notifier)
+      .update(value);
+
+  return value;
+});
+
+final invokeActionProvider = FutureProvider.autoDispose
+    .family<Object?, (ConsumedThing, String, InteractionInput?)>(
+        (ref, input) async {
+  final consumedThing = input.$1;
+  final actionName = input.$2;
+  final interactionInput = input.$3;
+
+  final interactionOutput = await consumedThing.invokeAction(
+    actionName,
+    input: interactionInput,
+  );
+  final value = await interactionOutput.value();
+
+  ref
+      .read(affordanceStateHistoryProvider(
+        (
+          thingDescriptionId: consumedThing.thingDescription.id!,
+          affordanceKey: actionName,
+          affordanceType: "Action",
         ),
       ).notifier)
       .update(value);

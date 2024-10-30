@@ -12,13 +12,20 @@ final affordanceStateHistoryProvider = StateNotifierProvider.family<
     ({
       String thingDescriptionId,
       String affordanceKey,
+      // TODO: Turn into enum
+      String affordanceType,
     })>(
   (ref, parameters) {
-    final (:thingDescriptionId, :affordanceKey) = parameters;
+    final (
+      :thingDescriptionId,
+      :affordanceKey,
+      :affordanceType,
+    ) = parameters;
     return AffordanceHistoryState(
       ref,
       thingDescriptionId,
       affordanceKey,
+      affordanceType,
     );
   },
 );
@@ -28,11 +35,14 @@ class AffordanceHistoryState extends StateNotifier<List<(int, Object?)>> {
     this.ref,
     this.thingDescriptionId,
     this.affordanceKey,
+    this.affordanceType,
   ) : super([]);
 
   final String thingDescriptionId;
 
   final String affordanceKey;
+
+  final String affordanceType;
 
   final Ref ref;
 

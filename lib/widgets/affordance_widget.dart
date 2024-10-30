@@ -10,11 +10,11 @@ import 'package:eclipse_thingweb_app/providers/interaction_provider.dart';
 import 'package:eclipse_thingweb_app/providers/subscription_provider.dart';
 import 'package:eclipse_thingweb_app/providers/affordance_state_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
+import 'package:eclipse_thingweb_app/widgets/property_visualization.dart';
 import 'package:flutter/material.dart';
 
-import 'dart:math';
+import "dart:developer" as developer;
 
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 

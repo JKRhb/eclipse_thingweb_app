@@ -118,7 +118,7 @@ class StringListPreferenceNotifier
 
 typedef DiscoveryPreferences = ({
   String? discoveryUrl,
-  String? discoveryMethod,
+  String discoveryMethod,
 });
 
 final discoverMethodProvider =
@@ -129,7 +129,8 @@ final discoverUrlProvider = stringPreferencesProvider("discovery-url-key");
 final discoverySettingsProvider =
     FutureProvider.autoDispose<DiscoveryPreferences>((ref) async {
   final discoveryUrl = await ref.watch(discoverUrlProvider.future);
-  final discoveryMethod = await ref.watch(discoverMethodProvider.future);
+  final discoveryMethod =
+      await ref.watch(discoverMethodProvider.future) ?? "Direct";
 
   return (discoveryUrl: discoveryUrl, discoveryMethod: discoveryMethod);
 });

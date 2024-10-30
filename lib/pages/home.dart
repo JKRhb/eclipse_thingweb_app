@@ -51,7 +51,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       final parsedDiscoveryUrl = Uri.parse(discoveryUrl);
 
       // TODO: Parse discovery method as enum
-      switch (discoveryMethod ?? "Direct") {
+      switch (discoveryMethod) {
         case "Direct":
           final thingDescription =
               await wot.requestThingDescription(parsedDiscoveryUrl);

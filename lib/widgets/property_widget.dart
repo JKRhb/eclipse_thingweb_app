@@ -24,57 +24,14 @@ final class PropertyWidget extends AffordanceWidget {
 final class _PropertyState extends _AffordanceState<PropertyWidget> {
   _PropertyState();
 
-  ConsumedThing get consumedThing => widget._consumedThing;
-
-  ({
-    String thingDescriptionId,
-    String affordanceKey,
-  }) get _accessor => (
-        affordanceKey: widget._affordanceKey,
-        thingDescriptionId: widget._consumedThing.thingDescription.id!,
-      );
-
-  // TODO: Refactor
-  List<(int, double)> get _data {
-    final data = ref.watch(affordanceStateHistoryProvider(_accessor));
-
-    if (data.isEmpty) {
-      return [];
-    }
-
-    if (data is List<(int, double)>) {
-      return data;
-    }
-
-    final result = <(int, double)>[];
-
-    for (final dataPoint in data) {
-      if (dataPoint is (int, double)) {
-        result.add(dataPoint);
-      }
-    }
-
-    return result;
-  }
-
-  int get _initialWindowIndex => max(0, _data.length - _maxElements);
-
-  List<(int, double)> get _dataWindow {
-    final result = <(int, double)>[];
-    final data = _data;
-
-    for (var i = _initialWindowIndex; i < data.length; i++) {
-      result.add(data[i]);
-    }
-
-    return result;
-  }
+  ConsumedThing get _consumedThing => widget._consumedThing;
 
   Property get _property => widget._interactionAffordance;
 
   String get _propertyKey => widget._affordanceKey;
 
-  final int _maxElements = 50;
+  // TODO: Replace with global setting
+  static const int _maxElements = 50;
 
   @override
   void dispose() {
@@ -86,27 +43,25 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
         ref.read(subscriptionStateProvider.notifier);
 
     final hasSubscription = subscriptionStateNotifier.hasSubscription(
-        consumedThing, SubscriptionType.property, _propertyKey);
+        _consumedThing, SubscriptionType.property, _propertyKey);
 
     if (hasSubscription) {
       subscriptionStateNotifier.removeSubscriptionState(
-          consumedThing.thingDescription.id!,
+          _consumedThing.thingDescription.id!,
           SubscriptionType.property,
           _propertyKey);
       return;
     }
 
     subscriptionStateNotifier.addPropertySubscription(
-      consumedThing,
+      _consumedThing,
       _propertyKey,
     );
   }
 
-  bool get isNumericDataType => ["integer", "number"].contains(_property.type);
-
   Widget get _readPropertyButton {
     final isLoading = ref
-        .watch(readPropertyProvider((consumedThing, _propertyKey)))
+        .watch(readPropertyProvider((_consumedThing, _propertyKey)))
         .isLoading;
 
     if (isLoading) {
@@ -123,7 +78,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
     return IconButton(
       onPressed: () =>
-          ref.refresh(readPropertyProvider((consumedThing, _propertyKey))),
+          ref.refresh(readPropertyProvider((_consumedThing, _propertyKey))),
       tooltip: "Retrieve the latest property value",
       icon: const Icon(Icons.refresh),
     );
@@ -131,21 +86,37 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   Widget get _currentValue {
     final value =
-        ref.watch(readPropertyProvider((consumedThing, _propertyKey)));
+        ref.watch(readPropertyProvider((_consumedThing, _propertyKey)));
 
-    return switch (value) {
-      AsyncError() => const Text('Failed to retrieve the property value.'),
-      AsyncData(:final value) => Text(value.toString()),
-      _ => LoadingAnimationWidget.staggeredDotsWave(
+    switch (value) {
+      case AsyncError(:final error):
+        developer.log(
+          "Getting the current value failed.",
+          name: "_PropertyState",
+          error: error,
+        );
+        return const Text('Failed to retrieve the property value.');
+      case AsyncData(:final value):
+        return Text(value.toString());
+      default:
+        return LoadingAnimationWidget.staggeredDotsWave(
           color: Colors.black,
           size: 20,
-        ),
-    };
+        );
+    }
   }
 
   @override
   List<Widget> get _cardBody {
     final currentValue = _currentValue;
+
+    final propertyVisualization = PropertyVisualization.create(
+      _property,
+      ref,
+      widget._affordanceKey,
+      _maxElements,
+      widget._consumedThing.thingDescription.id!,
+    );
 
     return [
       Container(
@@ -158,8 +129,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
           ],
         ),
       ),
-      if (isNumericDataType && _dataWindow.isNotEmpty)
-        _PropertyVisualization(_property, _dataWindow),
+      if (propertyVisualization != null) propertyVisualization,
     ];
   }
 
@@ -194,78 +164,5 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
           ),
         ),
     ];
-  }
-}
-
-class _PropertyVisualization extends StatelessWidget {
-  const _PropertyVisualization(this._property, this._data);
-
-  final Property _property;
-
-  String? get _propertyTitle => _property.title;
-
-  final List<(int, double)> _data;
-
-  List<FlSpot> get _spots =>
-      _data.map((e) => FlSpot(e.$1.toDouble(), e.$2)).toList();
-
-  Text? get axisTitle =>
-      _propertyTitle != null ? Text("$_propertyTitle over Time") : null;
-
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-      title: const Text('Data Visualization'),
-      children: [
-        AspectRatio(
-          aspectRatio: 2.0,
-          child: LineChart(
-            LineChartData(
-              minY: _property.minimum?.toDouble(),
-              maxY: _property.maximum?.toDouble(),
-              clipData: const FlClipData.all(),
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  axisNameWidget: const Text('Time'),
-                  axisNameSize: 24,
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    // FIXME: This is still not that great
-                    interval:
-                        const Duration(seconds: 60).inMilliseconds.toDouble(),
-                    getTitlesWidget: (value, metaData) {
-                      final DateTime date =
-                          DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                      final parts = date.toIso8601String().split("T");
-
-                      return SideTitleWidget(
-                        axisSide: AxisSide.bottom,
-                        child: Text(parts.first),
-                      );
-                    },
-                  ),
-                ),
-                topTitles: AxisTitles(
-                  axisNameWidget: axisTitle,
-                  axisNameSize: 24,
-                  sideTitles: const SideTitles(
-                    showTitles: false,
-                    reservedSize: 0,
-                  ),
-                ),
-              ),
-              lineBarsData: [
-                LineChartBarData(
-                  show: true,
-                  isCurved: true,
-                  spots: _spots,
-                ),
-              ],
-            ),
-            duration: Duration.zero,
-          ),
-        ),
-      ],
-    );
   }
 }

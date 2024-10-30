@@ -41,6 +41,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final discoveryUrl = ref.watch(discoverUrlProvider);
     final discoveryMethod = ref.watch(discoverMethodProvider);
 
+    const settingsTileColor = Colors.blueGrey;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
@@ -48,10 +50,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       body: SettingsList(
+        lightTheme:
+            const SettingsThemeData(settingsListBackground: Colors.white),
         sections: [
           SettingsSection(
             tiles: [
               SettingsTile(
+                backgroundColor: settingsTileColor,
                 title: const Text('Discovery URL'),
                 trailing: switch (discoveryUrl) {
                   AsyncData(:final value) => Text(_formatDiscoveryUrl(value)),
@@ -88,6 +93,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 },
               ),
               SettingsTile(
+                backgroundColor: settingsTileColor,
                 title: const Text('Discovery Method'),
                 leading: const Icon(Icons.language),
                 trailing: switch (discoveryMethod) {

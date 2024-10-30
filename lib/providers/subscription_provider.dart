@@ -87,6 +87,7 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
             .read(affordanceStateHistoryProvider((
               thingDescriptionId: consumedThing.thingDescription.id!,
               affordanceKey: affordanceKey,
+              affordanceType: "Property",
             )).notifier)
             .update(value.toDouble());
       }
@@ -109,12 +110,12 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
     final result = <SubscriptionState>[];
 
     for (final subscriptionState in state) {
-      if (subscriptionState.thingDescriptionId != thingDescriptionId &&
-          subscriptionState.subscriptionType != subscriptionType &&
-          subscriptionState.affordanceKey != affordanceKey) {
-        result.add(subscriptionState);
-      } else {
+      if (subscriptionState.thingDescriptionId == thingDescriptionId &&
+          subscriptionState.subscriptionType == subscriptionType &&
+          subscriptionState.affordanceKey == affordanceKey) {
         await subscriptionState.subscription.stop();
+      } else {
+        result.add(subscriptionState);
       }
     }
 

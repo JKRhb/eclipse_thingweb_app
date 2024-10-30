@@ -15,6 +15,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dart:developer';
+
 import 'pages/home.dart';
 import 'pages/settings.dart';
 
@@ -36,6 +38,8 @@ final consumedThingProvider = FutureProvider.autoDispose
 });
 
 Future<void> main() async {
+  log("Starting app.");
+
   runApp(
     const ProviderScope(
       child: WotApp(),
