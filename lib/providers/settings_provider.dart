@@ -7,7 +7,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final preferences = SharedPreferencesAsync();
+final _preferences = SharedPreferencesAsync();
 
 final booleanPreferencesProvider =
     AsyncNotifierProvider.family<BooleanPreferenceNotifier, bool?, String>(
@@ -16,16 +16,16 @@ final booleanPreferencesProvider =
 class BooleanPreferenceNotifier extends FamilyAsyncNotifier<bool?, String> {
   @override
   Future<bool?> build(String arg) async {
-    return preferences.getBool(arg);
+    return _preferences.getBool(arg);
   }
 
   Future<void> remove() async {
-    await preferences.remove(arg);
+    await _preferences.remove(arg);
     state = const AsyncData(null);
   }
 
   Future<void> write(bool value) async {
-    await preferences.setBool(arg, value);
+    await _preferences.setBool(arg, value);
     state = AsyncData(value);
   }
 }
@@ -37,16 +37,16 @@ final doublePreferencesProvider =
 class DoublePreferenceNotifier extends FamilyAsyncNotifier<double?, String> {
   @override
   Future<double?> build(String arg) async {
-    return preferences.getDouble(arg);
+    return _preferences.getDouble(arg);
   }
 
   Future<void> remove() async {
-    await preferences.remove(arg);
+    await _preferences.remove(arg);
     state = const AsyncData(null);
   }
 
   Future<void> write(double value) async {
-    await preferences.setDouble(arg, value);
+    await _preferences.setDouble(arg, value);
     state = AsyncData(value);
   }
 }
@@ -58,16 +58,16 @@ final integerPreferencesProvider =
 class IntegerPreferenceNotifier extends FamilyAsyncNotifier<int?, String> {
   @override
   Future<int?> build(String arg) async {
-    return preferences.getInt(arg);
+    return _preferences.getInt(arg);
   }
 
   Future<void> remove() async {
-    await preferences.remove(arg);
+    await _preferences.remove(arg);
     state = const AsyncData(null);
   }
 
   Future<void> write(int value) async {
-    await preferences.setInt(arg, value);
+    await _preferences.setInt(arg, value);
     state = AsyncData(value);
   }
 }
@@ -79,16 +79,16 @@ final stringPreferencesProvider =
 class StringPreferenceNotifier extends FamilyAsyncNotifier<String?, String> {
   @override
   Future<String?> build(String arg) async {
-    return preferences.getString(arg);
+    return _preferences.getString(arg);
   }
 
   Future<void> remove() async {
-    await preferences.remove(arg);
+    await _preferences.remove(arg);
     state = const AsyncData(null);
   }
 
   Future<void> write(String value) async {
-    await preferences.setString(arg, value);
+    await _preferences.setString(arg, value);
     state = AsyncData(value);
   }
 }
@@ -102,35 +102,33 @@ class StringListPreferenceNotifier
     extends FamilyAsyncNotifier<List<String>?, String> {
   @override
   Future<List<String>?> build(String arg) async {
-    return preferences.getStringList(arg);
+    return _preferences.getStringList(arg);
   }
 
-  Future<void> remove() async {
-    await preferences.remove(arg);
+  Future<void> clear() async {
+    await _preferences.remove(arg);
     state = const AsyncData(null);
   }
 
   Future<void> write(List<String> value) async {
-    await preferences.setStringList(arg, value);
+    await _preferences.setStringList(arg, value);
     state = AsyncData(value);
   }
+
+  Future<void> add(String value) async {
+    final currentValues = (await _preferences.getStringList(arg)) ?? [];
+
+    final newValues = [...currentValues, value];
+
+    await write(newValues);
+  }
+
+  Future<void> remove(String value) async {
+    final currentValues = await _preferences.getStringList(arg);
+
+    final newValue =
+        currentValues?.where((element) => element != value).toList() ?? [];
+
+    await write(newValue);
+  }
 }
-
-typedef DiscoveryPreferences = ({
-  String? discoveryUrl,
-  String discoveryMethod,
-});
-
-final discoverMethodProvider =
-    stringPreferencesProvider("discovery-method-key");
-
-final discoverUrlProvider = stringPreferencesProvider("discovery-url-key");
-
-final discoverySettingsProvider =
-    FutureProvider.autoDispose<DiscoveryPreferences>((ref) async {
-  final discoveryUrl = await ref.watch(discoverUrlProvider.future);
-  final discoveryMethod =
-      await ref.watch(discoverMethodProvider.future) ?? "Direct";
-
-  return (discoveryUrl: discoveryUrl, discoveryMethod: discoveryMethod);
-});

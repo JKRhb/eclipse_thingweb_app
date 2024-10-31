@@ -9,7 +9,9 @@ import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/pages/events.dart';
+import 'package:eclipse_thingweb_app/pages/discovery_uri_form.dart';
 import 'package:eclipse_thingweb_app/pages/thing.dart';
+import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -85,6 +87,20 @@ class WotApp extends StatelessWidget {
           GoRoute(
             path: "/events",
             builder: (context, state) => const EventsPage(),
+          ),
+          GoRoute(
+            path: "/form",
+            builder: (context, state) {
+              final discoveryMethod = state.extra;
+
+              if (discoveryMethod is! DiscoveryMethod) {
+                throw StateError(
+                  "Missing discovery method indicator.",
+                );
+              }
+
+              return DiscoveryUriFormsPage(discoveryMethod);
+            },
           ),
           GoRoute(
             path: '/thing',

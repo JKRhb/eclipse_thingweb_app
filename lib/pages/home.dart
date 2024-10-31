@@ -6,6 +6,7 @@
 
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/main.dart';
+import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
 import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart';
 import 'package:eclipse_thingweb_app/providers/thing_description_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
@@ -13,8 +14,6 @@ import 'package:eclipse_thingweb_app/widgets/notifications_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import '../providers/settings_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({
@@ -35,40 +34,16 @@ class _HomePageState extends ConsumerState<HomePage> {
         .addThingDescription(thingDescription);
   }
 
-  void _startDiscovery(
-      BuildContext context, DiscoveryPreferences discoveryPreferences) async {
+  void _startDiscovery(BuildContext context) async {
     final wot = await ref.watch(wotProvider.future);
+    final discoveryConfigurations =
+        await ref.watch(discoveryConfigurationsProvider.future);
 
-    final (:discoveryUrl, :discoveryMethod) = discoveryPreferences;
+    final thingDiscovery = wot.discover(discoveryConfigurations);
 
     try {
-      if (discoveryUrl == null) {
-        throw const DiscoveryException(
-          "A discovery URL must be set in the preferences.",
-        );
-      }
-
-      final parsedDiscoveryUrl = Uri.parse(discoveryUrl);
-
-      // TODO: Parse discovery method as enum
-      switch (discoveryMethod) {
-        case "Direct":
-          final thingDescription =
-              await wot.requestThingDescription(parsedDiscoveryUrl);
-          _registerThingDescription(thingDescription);
-
-        case "Directory":
-          final discoveryProcess =
-              await wot.exploreDirectory(parsedDiscoveryUrl);
-
-          await for (final thingDescription in discoveryProcess) {
-            _registerThingDescription(thingDescription);
-          }
-
-        default:
-          throw DiscoveryException(
-            "Unknown or unsupported discovery method $discoveryMethod set.",
-          );
+      await for (final thingDescription in thingDiscovery) {
+        _registerThingDescription(thingDescription);
       }
 
       if (context.mounted) {
@@ -103,22 +78,15 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final thingDescriptions = ref.watch(thingDescriptionProvider);
-    final discoverySettings = ref.watch(discoverySettingsProvider);
+    // final discoverySettings = ref.watch(discoverySettingsProvider);
 
     const discoveryButtonIcon = Icon(Icons.travel_explore);
 
     return Scaffold(
-      floatingActionButton: switch (discoverySettings) {
-        AsyncData(:final value) => FloatingActionButton(
-            onPressed: () => _startDiscovery(context, value),
-            child: discoveryButtonIcon,
-          ),
-        AsyncError() => const FloatingActionButton(
-            onPressed: null,
-            child: discoveryButtonIcon,
-          ),
-        _ => const CircularProgressIndicator(),
-      },
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _startDiscovery(context),
+        child: discoveryButtonIcon,
+      ),
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: Theme.of(context).primaryColor,
@@ -139,16 +107,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          final discoverySettings =
-              await ref.watch(discoverySettingsProvider.future);
-
-          if (!context.mounted) {
-            return;
-          }
-
-          _startDiscovery(context, discoverySettings);
-        },
+        onRefresh: () => ref.refresh(discoveryConfigurationsProvider.future),
         child: ListView(
           children: thingDescriptions.map(
             (thingDescription) {

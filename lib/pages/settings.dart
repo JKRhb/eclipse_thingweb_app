@@ -4,11 +4,12 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/providers/settings_provider.dart';
-import 'package:eclipse_thingweb_app/widgets/input_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
+import 'package:go_router/go_router.dart';
+
+import '../providers/discovery_settings_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({
@@ -22,26 +23,17 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   _SettingsPageState();
 
-  static String _formatDiscoveryUrl(String? discoveryUrl) {
-    const maxUrlLength = 20;
-
-    if (discoveryUrl == null) {
-      return "Unset";
-    }
-
-    if (discoveryUrl.length > maxUrlLength) {
-      return "${discoveryUrl.substring(0, maxUrlLength)}...";
-    }
-
-    return discoveryUrl;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final discoveryUrl = ref.watch(discoverUrlProvider);
-    final discoveryMethod = ref.watch(discoverMethodProvider);
+    final directMethodEnabled =
+        ref.watch(discoveryMethodEnabledProvider(DiscoveryMethod.direct));
+    final directDiscoveryUrls =
+        ref.watch(discoveryUrlProvider(DiscoveryMethod.direct));
 
-    const settingsTileColor = Colors.blueGrey;
+    final directoryMethodEnabled =
+        ref.watch(discoveryMethodEnabledProvider(DiscoveryMethod.directory));
+    final directoryDiscoveryUrls =
+        ref.watch(discoveryUrlProvider(DiscoveryMethod.directory));
 
     return Scaffold(
       appBar: AppBar(
@@ -50,120 +42,95 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       body: SettingsList(
-        lightTheme:
-            const SettingsThemeData(settingsListBackground: Colors.white),
         sections: [
           SettingsSection(
+            title: const Text("Direct Discovery"),
             tiles: [
-              SettingsTile(
-                backgroundColor: settingsTileColor,
-                title: const Text('Discovery URL'),
-                trailing: switch (discoveryUrl) {
-                  AsyncData(:final value) => Text(_formatDiscoveryUrl(value)),
-                  AsyncError(:final error) => Text('Error occurred: $error'),
-                  _ => const CircularProgressIndicator(),
+              SettingsTile.switchTile(
+                title: const Text('Use Direct Discovery'),
+                leading: const Icon(Icons.navigation),
+                onToggle: (bool value) async {
+                  await ref
+                      .read(
+                          discoveryMethodEnabledProvider(DiscoveryMethod.direct)
+                              .notifier)
+                      .toggle();
                 },
-                leading: const Icon(Icons.link),
-                onPressed: (BuildContext context) async {
-                  final currentValue =
-                      await ref.read(discoverUrlProvider.future);
-
-                  final result = await _openDialog(
-                    "Enter a Discovery URL",
-                    currentValue,
-                    validator: (value) {
-                      final parsedUrl = Uri.tryParse(value ?? "");
-
-                      if (parsedUrl == null) {
-                        return "Please enter a valid URL";
-                      }
-
-                      return null;
-                    },
+                initialValue: directMethodEnabled.value,
+              ),
+              SettingsTile.navigation(
+                title: const Text('Add Discovery URL'),
+                leading: const Icon(Icons.add),
+                onPressed: (context) {
+                  context.push(
+                    "/form",
+                    extra: DiscoveryMethod.direct,
                   );
-
-                  final notifier = ref.read(discoverUrlProvider.notifier);
-
-                  if (result == null) {
-                    notifier.remove();
-                    return;
-                  }
-
-                  notifier.write(result);
                 },
               ),
-              SettingsTile(
-                backgroundColor: settingsTileColor,
-                title: const Text('Discovery Method'),
-                leading: const Icon(Icons.language),
-                trailing: switch (discoveryMethod) {
-                  AsyncData(:final value) => DropdownButton<String>(
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      value: value,
-                      onChanged: (String? newValue) async {
-                        final notifier =
-                            ref.read(discoverMethodProvider.notifier);
+              ...(directDiscoveryUrls.value ?? <Uri>[]).map(
+                (uri) => SettingsTile(
+                  leading: const Icon(Icons.link),
+                  title: Text(uri.toString()),
+                  trailing: IconButton(
+                    onPressed: () {
+                      final notifier = ref.read(
+                          discoveryUrlProvider(DiscoveryMethod.direct)
+                              .notifier);
 
-                        if (newValue != null) {
-                          await notifier.write(newValue);
-
-                          return;
-                        }
-
-                        await notifier.remove();
-                      },
-                      items: <String>['Direct', 'Directory']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ), //=> Text(_formatDiscoveryUrl(value)),
-                  AsyncError(:final error) => Text('Error occurred: $error'),
-                  _ => const CircularProgressIndicator(),
-                },
+                      notifier.remove(uri);
+                    },
+                    icon: const Icon(Icons.remove),
+                  ),
+                ),
               ),
             ],
           ),
+          SettingsSection(
+            title: const Text("Directory Discovery"),
+            tiles: [
+              SettingsTile.switchTile(
+                title: const Text('Use Directory Discovery'),
+                leading: const Icon(Icons.navigation),
+                onToggle: (bool value) async {
+                  await ref
+                      .read(discoveryMethodEnabledProvider(
+                              DiscoveryMethod.directory)
+                          .notifier)
+                      .toggle();
+                },
+                initialValue: directoryMethodEnabled.value,
+              ),
+              SettingsTile.navigation(
+                onPressed: (context) {
+                  context.push(
+                    "/form",
+                    extra: DiscoveryMethod.directory,
+                  );
+                },
+                title: const Text('Add Discovery URL'),
+                leading: const Icon(Icons.add),
+              ),
+              ...(directoryDiscoveryUrls.value ?? <Uri>[]).map(
+                (uri) => SettingsTile(
+                  leading: const Icon(Icons.link),
+                  title: Text(uri.toString()),
+                  trailing: IconButton(
+                    onPressed: () {
+                      final notifier = ref.read(
+                          discoveryUrlProvider(DiscoveryMethod.directory)
+                              .notifier);
+
+                      notifier.remove(uri);
+                    },
+                    icon: const Icon(Icons.remove),
+                  ),
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );
   }
-
-  Future<String?> _openDialog(
-    String dialogTitle,
-    String? initialValue, {
-    String? Function(String?)? validator,
-  }) =>
-      showDialog<String>(
-        context: context,
-        builder: (context) => Dialog(
-          child: SizedBox(
-            height: 200,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Text(
-                    dialogTitle,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const Spacer(),
-                  InputForm(
-                    initialValue: initialValue,
-                    submitCallback: (value) {
-                      Navigator.of(context).pop(value);
-                    },
-                    cancelCallback: (value) {
-                      Navigator.of(context).pop(value);
-                    },
-                    validator: validator,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
 }
