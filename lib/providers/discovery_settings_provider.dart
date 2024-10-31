@@ -75,12 +75,28 @@ final discoveryConfigurationsProvider = FutureProvider((ref) async {
 
   final directDiscoveryEnabled = await ref
       .watch(discoveryMethodEnabledProvider(DiscoveryMethod.direct).future);
+  final directoryDiscoveryEnabled = await ref
+      .watch(discoveryMethodEnabledProvider(DiscoveryMethod.directory).future);
 
   if (directDiscoveryEnabled) {
     final directDiscoveryUrls =
         await ref.watch(discoveryUrlProvider(DiscoveryMethod.direct).future);
 
     result.addAll(directDiscoveryUrls.map((url) => DirectConfiguration(url)));
+  }
+
+  if (directoryDiscoveryEnabled) {
+    final directoryDiscoveryUrls =
+        await ref.watch(discoveryUrlProvider(DiscoveryMethod.directory).future);
+
+    result.addAll(
+      directoryDiscoveryUrls.map(
+        // TODO: Also set the other parameters here
+        (url) => ExploreDirectoryConfiguration(
+          url,
+        ),
+      ),
+    );
   }
 
   return result;
