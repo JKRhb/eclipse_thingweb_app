@@ -67,8 +67,9 @@ abstract base class AffordanceWidget extends ConsumerStatefulWidget {
 abstract base class _AffordanceState<T extends AffordanceWidget>
     extends ConsumerState<T> {
   ListTile get _cardHeader {
-    final cardTitle =
-        Text(widget._interactionAffordance.title ?? widget._affordanceKey);
+    final cardTitle = Text(
+      widget._interactionAffordance.title ?? widget._affordanceKey,
+    );
 
     final actionDescription = widget._interactionAffordance.description;
     final cardDescription =
@@ -78,8 +79,12 @@ abstract base class _AffordanceState<T extends AffordanceWidget>
       title: cardTitle,
       subtitle: cardDescription,
       trailing: Text(widget.affordanceType),
+      tileColor: Theme.of(context).primaryColor,
+      textColor: Theme.of(context).colorScheme.onPrimary,
     );
   }
+
+  List<Widget> get _statusWidgets => [const Text("")];
 
   List<Widget> get _cardBody;
 
@@ -88,12 +93,19 @@ abstract base class _AffordanceState<T extends AffordanceWidget>
   @override
   Widget build(BuildContext context) {
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           _cardHeader,
-          OverflowBar(
-            alignment: MainAxisAlignment.end,
-            children: _cardButtons,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ..._statusWidgets,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: _cardButtons,
+              ),
+            ],
           ),
           ..._cardBody,
         ],

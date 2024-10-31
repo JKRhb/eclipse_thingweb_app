@@ -107,9 +107,23 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
   }
 
   @override
-  List<Widget> get _cardBody {
-    final currentValue = _currentValue;
+  List<Widget> get _statusWidgets {
+    return [
+      Container(
+        padding: const EdgeInsets.all(16.0),
+        alignment: Alignment.centerLeft,
+        child: Row(
+          children: [
+            const Text("Current value: "),
+            _currentValue,
+          ],
+        ),
+      ),
+    ];
+  }
 
+  @override
+  List<Widget> get _cardBody {
     final propertyVisualization = PropertyVisualization.create(
       _property,
       ref,
@@ -119,16 +133,6 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
     );
 
     return [
-      Container(
-        padding: const EdgeInsets.all(16.0),
-        alignment: Alignment.centerLeft,
-        child: Row(
-          children: [
-            const Text("Current value: "),
-            currentValue,
-          ],
-        ),
-      ),
       if (propertyVisualization != null) propertyVisualization,
     ];
   }
