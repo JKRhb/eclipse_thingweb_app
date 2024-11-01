@@ -26,13 +26,13 @@ class ThingPage extends ConsumerStatefulWidget {
 }
 
 class _ThingPageState extends ConsumerState<ThingPage> {
-  Map<String, Property> get _properties =>
-      widget._thingDescription.properties ?? {};
+  ThingDescription get thingDescription => widget._thingDescription;
 
-  Map<String, dart_wot.Action> get _actions =>
-      widget._thingDescription.actions ?? {};
+  Map<String, Property> get _properties => thingDescription.properties ?? {};
 
-  Map<String, Event> get _events => widget._thingDescription.events ?? {};
+  Map<String, dart_wot.Action> get _actions => thingDescription.actions ?? {};
+
+  Map<String, Event> get _events => thingDescription.events ?? {};
 
   Map<String, InteractionAffordance> get _interactionAffordances =>
       Map.fromEntries(
@@ -43,35 +43,95 @@ class _ThingPageState extends ConsumerState<ThingPage> {
         ],
       );
 
-  // TODO: Improve formatting.
-  Card get _metadataWidget {
-    final id = widget._thingDescription.id;
-    final description = widget._thingDescription.description;
-    return Card(
-      child: Column(
+  TableRow _formatTableRow(
+    String leftColumnData,
+    String rightColumnData,
+  ) =>
+      TableRow(
         children: [
-          if (description != null)
-            ListTile(
-              subtitle: Text(description),
+          Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Text(
+              leftColumnData,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          if (id != null) Text("ID: $id"),
+          ),
+          Text(rightColumnData),
+        ],
+      );
+
+  Card get _metadataWidget {
+    final id = thingDescription.id;
+    final title = thingDescription.title;
+    final description = thingDescription.description;
+    final version = thingDescription.version?.instance;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            leading: Icon(
+              Icons.devices,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+            title: Text(title),
+            trailing: const Text("Metadata"),
+            tileColor: Theme.of(context).primaryColor,
+            textColor: Theme.of(context).colorScheme.onPrimary,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                  ),
+                  child: Table(
+                    columnWidths: const <int, TableColumnWidth>{
+                      0: IntrinsicColumnWidth(),
+                      1: IntrinsicColumnWidth(),
+                    },
+                    children: [
+                      for (final (fieldName, fieldData) in [
+                        ("Description", description),
+                        ("ID", id),
+                        ("Version", version)
+                      ])
+                        if (fieldData != null)
+                          _formatTableRow(fieldName, fieldData),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget get _affordanceWidgets {
-    final consumedThing =
-        ref.watch(consumedThingProvider(widget._thingDescription));
+    final consumedThing = ref.watch(consumedThingProvider(thingDescription));
 
     return switch (consumedThing) {
       AsyncData(:final value) => Column(
           children: _interactionAffordances.entries
               .map(
-                (property) => AffordanceWidget.create(
-                  value,
-                  property.value,
-                  property.key,
+                (interactionAffordanceEntry) => Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: AffordanceWidget.create(
+                    value,
+                    interactionAffordanceEntry.value,
+                    interactionAffordanceEntry.key,
+                  ),
                 ),
               )
               .toList(),
@@ -87,7 +147,7 @@ class _ThingPageState extends ConsumerState<ThingPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        title: Text(widget._thingDescription.title),
+        title: const Text("Thing Interactions"),
       ),
       body: SingleChildScrollView(
         child: Column(
