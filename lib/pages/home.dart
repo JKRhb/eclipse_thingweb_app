@@ -75,10 +75,44 @@ class _HomePageState extends ConsumerState<HomePage> {
       .where((eventNotification) => !eventNotification.read)
       .length;
 
+  Widget _obtainThingDescriptionIcon(ThingDescription thingDescription) {
+    const defaultIcon = Icon(Icons.devices_other);
+
+    final iconLink = thingDescription.links
+        ?.where(
+          (link) => link.rel == "icon" && link.href.scheme.startsWith("http"),
+        )
+        .firstOrNull
+        ?.href
+        .toString();
+
+    if (iconLink == null) {
+      return defaultIcon;
+    }
+
+    const fallbackSize = 24.0;
+    final size = Theme.of(context).iconTheme.size ?? fallbackSize;
+
+    return Image.network(
+      height: size,
+      width: size,
+      iconLink,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return const CircularProgressIndicator();
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return defaultIcon;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final thingDescriptions = ref.watch(thingDescriptionProvider);
-    // final discoverySettings = ref.watch(discoverySettingsProvider);
 
     const discoveryButtonIcon = Icon(Icons.travel_explore);
 
@@ -112,13 +146,13 @@ class _HomePageState extends ConsumerState<HomePage> {
           children: thingDescriptions.map(
             (thingDescription) {
               final description = thingDescription.description;
+              final icon = _obtainThingDescriptionIcon(thingDescription);
 
               return Card(
                 child: ListTile(
                   title: Text(thingDescription.title),
                   subtitle: description != null ? Text(description) : null,
-                  // TODO: Use a network icon here.
-                  leading: const Icon(Icons.devices_other),
+                  leading: icon,
                   onTap: () async {
                     if (!context.mounted) {
                       return;
