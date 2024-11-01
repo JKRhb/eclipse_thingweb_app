@@ -9,7 +9,7 @@ import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/pages/events.dart';
-import 'package:eclipse_thingweb_app/pages/discovery_uri_form.dart';
+import 'package:eclipse_thingweb_app/pages/forms/discovery_uri_form.dart';
 import 'package:eclipse_thingweb_app/pages/thing.dart';
 import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';

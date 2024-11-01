@@ -69,6 +69,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 notifier.remove(uri);
               },
               icon: const Icon(Icons.remove),
+              tooltip: "Remove Discovery URL",
             ),
             onPressed: (context) {
               context.push(

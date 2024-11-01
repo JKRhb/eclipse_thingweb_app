@@ -62,7 +62,6 @@ class FormsPageState extends ConsumerState<DiscoveryUriFormsPage> {
       body: Form(
           key: _formKey,
           child: ListView(
-            // crossAxisAlignment: CrossAxisAlignment.end,
             padding: const EdgeInsets.all(10.0),
             children: [
               TextFormField(
