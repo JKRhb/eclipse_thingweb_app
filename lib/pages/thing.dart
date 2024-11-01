@@ -63,7 +63,6 @@ class _ThingPageState extends ConsumerState<ThingPage> {
 
   Card get _metadataWidget {
     final id = thingDescription.id;
-    final title = thingDescription.title;
     final description = thingDescription.description;
     final version = thingDescription.version?.instance;
 
@@ -72,15 +71,8 @@ class _ThingPageState extends ConsumerState<ThingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            leading: Icon(
-              Icons.devices,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            title: Text(title),
-            trailing: const Text("Metadata"),
-            tileColor: Theme.of(context).primaryColor,
-            textColor: Theme.of(context).colorScheme.onPrimary,
+          const ListTile(
+            title: Text("Metadata"),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -147,7 +139,21 @@ class _ThingPageState extends ConsumerState<ThingPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        title: const Text("Thing Interactions"),
+        title: Text(thingDescription.title),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(
+              Icons.notifications,
+            ),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(
+              Icons.menu,
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
