@@ -52,14 +52,14 @@ abstract base class AffordanceWidget extends ConsumerStatefulWidget {
     }
   }
 
-  String get affordanceType {
+  AffordanceType get affordanceType {
     switch (_interactionAffordance) {
       case dart_wot.Action():
-        return "Action";
+        return AffordanceType.action;
       case Event():
-        return "Event";
+        return AffordanceType.event;
       case Property():
-        return "Property";
+        return AffordanceType.property;
     }
   }
 }
@@ -78,7 +78,7 @@ abstract base class _AffordanceState<T extends AffordanceWidget>
     return ListTile(
       title: cardTitle,
       subtitle: cardDescription,
-      trailing: Text(widget.affordanceType),
+      trailing: Text(widget.affordanceType.toString()),
       tileColor: Theme.of(context).primaryColor,
       textColor: Theme.of(context).colorScheme.onPrimary,
     );

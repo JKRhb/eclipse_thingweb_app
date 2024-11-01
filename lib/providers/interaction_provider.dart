@@ -21,7 +21,7 @@ final readPropertyProvider = FutureProvider.autoDispose
         (
           thingDescriptionId: consumedThing.thingDescription.id!,
           affordanceKey: propertyName,
-          affordanceType: "Property",
+          affordanceType: AffordanceType.property,
         ),
       ).notifier)
       .update(value);
@@ -47,7 +47,7 @@ final invokeActionProvider = FutureProvider.autoDispose
         (
           thingDescriptionId: consumedThing.thingDescription.id!,
           affordanceKey: actionName,
-          affordanceType: "Action",
+          affordanceType: AffordanceType.action,
         ),
       ).notifier)
       .update(value);

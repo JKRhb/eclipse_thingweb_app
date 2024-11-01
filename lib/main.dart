@@ -49,6 +49,11 @@ Future<void> main() async {
   );
 }
 
+typedef _DiscoveryUriFormsParameter = ({
+  DiscoveryMethod discoveryMethod,
+  Uri? initialUrl,
+});
+
 class WotApp extends StatelessWidget {
   const WotApp({super.key});
 
@@ -91,27 +96,19 @@ class WotApp extends StatelessWidget {
           GoRoute(
             path: "/form",
             builder: (context, state) {
-              final discoveryMethod = state.extra;
+              final discoveryParameters =
+                  state.extra as _DiscoveryUriFormsParameter;
 
-              if (discoveryMethod is! DiscoveryMethod) {
-                throw StateError(
-                  "Missing discovery method indicator.",
-                );
-              }
-
-              return DiscoveryUriFormsPage(discoveryMethod);
+              return DiscoveryUriFormsPage(
+                discoveryParameters.discoveryMethod,
+                initialUrl: discoveryParameters.initialUrl,
+              );
             },
           ),
           GoRoute(
             path: '/thing',
             builder: (context, state) {
-              final data = state.extra;
-
-              if (data is! ThingDescription) {
-                throw StateError(
-                  "Expected Thing Description, got $data of type ${data.runtimeType}",
-                );
-              }
+              final data = state.extra as ThingDescription;
 
               return ThingPage(
                 data,

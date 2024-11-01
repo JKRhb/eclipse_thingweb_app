@@ -23,18 +23,70 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   _SettingsPageState();
 
+  SettingsSection _createSettingsSection(
+    String sectionTitle,
+    DiscoveryMethod discoveryMethod,
+  ) {
+    final methodEnabled =
+        ref.watch(discoveryMethodEnabledProvider(discoveryMethod));
+    final discoveryUrls = ref.watch(discoveryUrlProvider(discoveryMethod));
+
+    return SettingsSection(
+      title: Text(sectionTitle),
+      tiles: [
+        SettingsTile.switchTile(
+          title: Text('Use $sectionTitle'),
+          leading: const Icon(Icons.navigation),
+          onToggle: (bool value) async {
+            await ref
+                .read(discoveryMethodEnabledProvider(discoveryMethod).notifier)
+                .toggle();
+          },
+          initialValue: methodEnabled.value,
+        ),
+        SettingsTile.navigation(
+          title: const Text('Add Discovery URL'),
+          leading: const Icon(Icons.add),
+          onPressed: (context) {
+            context.push(
+              "/form",
+              extra: (
+                discoveryMethod: discoveryMethod,
+                initialUrl: null,
+              ),
+            );
+          },
+        ),
+        ...(discoveryUrls.value ?? <Uri>[]).map(
+          (uri) => SettingsTile(
+            leading: const Icon(Icons.link),
+            title: Text(uri.toString()),
+            trailing: IconButton(
+              onPressed: () {
+                final notifier =
+                    ref.read(discoveryUrlProvider(discoveryMethod).notifier);
+
+                notifier.remove(uri);
+              },
+              icon: const Icon(Icons.remove),
+            ),
+            onPressed: (context) {
+              context.push(
+                "/form",
+                extra: (
+                  discoveryMethod: discoveryMethod,
+                  initialUrl: uri,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final directMethodEnabled =
-        ref.watch(discoveryMethodEnabledProvider(DiscoveryMethod.direct));
-    final directDiscoveryUrls =
-        ref.watch(discoveryUrlProvider(DiscoveryMethod.direct));
-
-    final directoryMethodEnabled =
-        ref.watch(discoveryMethodEnabledProvider(DiscoveryMethod.directory));
-    final directoryDiscoveryUrls =
-        ref.watch(discoveryUrlProvider(DiscoveryMethod.directory));
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
@@ -43,92 +95,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ),
       body: SettingsList(
         sections: [
-          SettingsSection(
-            title: const Text("Direct Discovery"),
-            tiles: [
-              SettingsTile.switchTile(
-                title: const Text('Use Direct Discovery'),
-                leading: const Icon(Icons.navigation),
-                onToggle: (bool value) async {
-                  await ref
-                      .read(
-                          discoveryMethodEnabledProvider(DiscoveryMethod.direct)
-                              .notifier)
-                      .toggle();
-                },
-                initialValue: directMethodEnabled.value,
-              ),
-              SettingsTile.navigation(
-                title: const Text('Add Discovery URL'),
-                leading: const Icon(Icons.add),
-                onPressed: (context) {
-                  context.push(
-                    "/form",
-                    extra: DiscoveryMethod.direct,
-                  );
-                },
-              ),
-              ...(directDiscoveryUrls.value ?? <Uri>[]).map(
-                (uri) => SettingsTile(
-                  leading: const Icon(Icons.link),
-                  title: Text(uri.toString()),
-                  trailing: IconButton(
-                    onPressed: () {
-                      final notifier = ref.read(
-                          discoveryUrlProvider(DiscoveryMethod.direct)
-                              .notifier);
-
-                      notifier.remove(uri);
-                    },
-                    icon: const Icon(Icons.remove),
-                  ),
-                ),
-              ),
-            ],
+          _createSettingsSection(
+            "Direct Discovery",
+            DiscoveryMethod.direct,
           ),
-          SettingsSection(
-            title: const Text("Directory Discovery"),
-            tiles: [
-              SettingsTile.switchTile(
-                title: const Text('Use Directory Discovery'),
-                leading: const Icon(Icons.navigation),
-                onToggle: (bool value) async {
-                  await ref
-                      .read(discoveryMethodEnabledProvider(
-                              DiscoveryMethod.directory)
-                          .notifier)
-                      .toggle();
-                },
-                initialValue: directoryMethodEnabled.value,
-              ),
-              SettingsTile.navigation(
-                onPressed: (context) {
-                  context.push(
-                    "/form",
-                    extra: DiscoveryMethod.directory,
-                  );
-                },
-                title: const Text('Add Discovery URL'),
-                leading: const Icon(Icons.add),
-              ),
-              ...(directoryDiscoveryUrls.value ?? <Uri>[]).map(
-                (uri) => SettingsTile(
-                  leading: const Icon(Icons.link),
-                  title: Text(uri.toString()),
-                  trailing: IconButton(
-                    onPressed: () {
-                      final notifier = ref.read(
-                          discoveryUrlProvider(DiscoveryMethod.directory)
-                              .notifier);
-
-                      notifier.remove(uri);
-                    },
-                    icon: const Icon(Icons.remove),
-                  ),
-                ),
-              ),
-            ],
-          )
+          _createSettingsSection(
+            "Directory Discovery",
+            DiscoveryMethod.directory,
+          ),
         ],
       ),
     );

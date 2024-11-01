@@ -123,6 +123,17 @@ class StringListPreferenceNotifier
     await write(newValues);
   }
 
+  Future<void> replace(String existingValue, String newValue) async {
+    final currentValues = (await _preferences.getStringList(arg)) ?? [];
+
+    final newValues = [
+      for (final value in currentValues)
+        if (value == existingValue) newValue else value,
+    ];
+
+    await write(newValues);
+  }
+
   Future<void> remove(String value) async {
     final currentValues = await _preferences.getStringList(arg);
 

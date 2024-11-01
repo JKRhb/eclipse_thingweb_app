@@ -8,16 +8,20 @@ import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// TODO: Allow for editing existing DiscoveryUrls
 class DiscoveryUriFormsPage extends ConsumerStatefulWidget {
   const DiscoveryUriFormsPage(
     this._discoveryMethod, {
+    Uri? initialUrl,
     super.key,
-  });
+  }) : _initialUrl = initialUrl;
+
+  final Uri? _initialUrl;
 
   final DiscoveryMethod _discoveryMethod;
 
-  String get _title => "Please enter a Discovery URL";
+  String get _title => _initialUrl == null
+      ? "Please enter a Discovery URL"
+      : "Edit Discovery URL";
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => FormsPageState();
@@ -27,6 +31,19 @@ class FormsPageState extends ConsumerState<DiscoveryUriFormsPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _formFieldTextEditingController = TextEditingController();
+
+  Uri? get _initialUrl => widget._initialUrl;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final initialUrl = _initialUrl;
+
+    if (initialUrl != null) {
+      _formFieldTextEditingController.text = initialUrl.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -82,7 +99,13 @@ class FormsPageState extends ConsumerState<DiscoveryUriFormsPage> {
 
                       final uri =
                           Uri.parse(_formFieldTextEditingController.text);
-                      await notifier.add(uri);
+
+                      final initialUrl = _initialUrl;
+                      if (initialUrl == null) {
+                        await notifier.add(uri);
+                      } else {
+                        await notifier.replace(initialUrl, uri);
+                      }
 
                       if (!context.mounted) {
                         return;

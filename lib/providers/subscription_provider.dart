@@ -87,7 +87,7 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
             .read(affordanceStateHistoryProvider((
               thingDescriptionId: consumedThing.thingDescription.id!,
               affordanceKey: affordanceKey,
-              affordanceType: "Property",
+              affordanceType: AffordanceType.property,
             )).notifier)
             .update(value.toDouble());
       }

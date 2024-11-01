@@ -60,11 +60,11 @@ class PropertyVisualization extends StatelessWidget {
   ({
     String thingDescriptionId,
     String affordanceKey,
-    String affordanceType,
+    AffordanceType affordanceType,
   }) get _accessor => (
         affordanceKey: _affordanceKey,
         thingDescriptionId: _thingDescriptionId,
-        affordanceType: "Property",
+        affordanceType: AffordanceType.property,
       );
 
   int get _initialWindowIndex => max(0, _data.length - _maxElements);

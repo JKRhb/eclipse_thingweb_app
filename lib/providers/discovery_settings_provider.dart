@@ -67,6 +67,12 @@ class DiscoveryUrlNotifier
 
   Future<void> add(Uri uri) async => await _notifier.add(uri.toString());
 
+  Future<void> replace(Uri existingUri, Uri uri) async =>
+      await _notifier.replace(
+        existingUri.toString(),
+        uri.toString(),
+      );
+
   Future<void> remove(Uri uri) async => await _notifier.remove(uri.toString());
 }
 
