@@ -6,6 +6,7 @@
 
 import 'package:eclipse_thingweb_app/main.dart';
 import 'package:eclipse_thingweb_app/widgets/affordance_widget.dart';
+import 'package:eclipse_thingweb_app/widgets/thing_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:dart_wot/core.dart';
 import 'package:dart_wot/core.dart' as dart_wot;
@@ -69,10 +70,14 @@ class _ThingPageState extends ConsumerState<ThingPage> {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const ListTile(
-            title: Text("Metadata"),
+          ListTile(
+            leading: ThingIcon(thingDescription),
+            tileColor: Theme.of(context).primaryColor,
+            textColor: Theme.of(context).colorScheme.onPrimary,
+            iconColor: Theme.of(context).colorScheme.onPrimary,
+            title: const Text("Metadata"),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -89,7 +94,7 @@ class _ThingPageState extends ConsumerState<ThingPage> {
                   child: Table(
                     columnWidths: const <int, TableColumnWidth>{
                       0: IntrinsicColumnWidth(),
-                      1: IntrinsicColumnWidth(),
+                      1: FlexColumnWidth(),
                     },
                     children: [
                       for (final (fieldName, fieldData) in [

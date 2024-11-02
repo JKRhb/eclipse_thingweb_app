@@ -11,6 +11,7 @@ import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart
 import 'package:eclipse_thingweb_app/providers/thing_description_provider.dart';
 import 'package:eclipse_thingweb_app/util/snackbar.dart';
 import 'package:eclipse_thingweb_app/widgets/notifications_badge.dart';
+import 'package:eclipse_thingweb_app/widgets/thing_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -75,41 +76,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       .where((eventNotification) => !eventNotification.read)
       .length;
 
-  Widget _obtainThingDescriptionIcon(ThingDescription thingDescription) {
-    const defaultIcon = Icon(Icons.devices_other);
-
-    final iconLink = thingDescription.links
-        ?.where(
-          (link) => link.rel == "icon" && link.href.scheme.startsWith("http"),
-        )
-        .firstOrNull
-        ?.href
-        .toString();
-
-    if (iconLink == null) {
-      return defaultIcon;
-    }
-
-    const fallbackSize = 24.0;
-    final size = Theme.of(context).iconTheme.size ?? fallbackSize;
-
-    return Image.network(
-      height: size,
-      width: size,
-      iconLink,
-      fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) {
-          return child;
-        }
-        return const CircularProgressIndicator();
-      },
-      errorBuilder: (context, error, stackTrace) {
-        return defaultIcon;
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final thingDescriptions = ref.watch(thingDescriptionProvider);
@@ -146,13 +112,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           children: thingDescriptions.map(
             (thingDescription) {
               final description = thingDescription.description;
-              final icon = _obtainThingDescriptionIcon(thingDescription);
 
               return Card(
                 child: ListTile(
                   title: Text(thingDescription.title),
                   subtitle: description != null ? Text(description) : null,
-                  leading: icon,
+                  leading: ThingIcon(thingDescription),
                   onTap: () async {
                     if (!context.mounted) {
                       return;
