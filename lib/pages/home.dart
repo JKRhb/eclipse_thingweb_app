@@ -40,6 +40,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     final discoveryConfigurations =
         await ref.watch(discoveryConfigurationsProvider.future);
 
+    if (discoveryConfigurations.isEmpty && context.mounted) {
+      displayErrorMessageSnackbar(
+        context,
+        "Discovery failed",
+        "No discovery methods have been configured in the settings!",
+      );
+      return;
+    }
+
     final thingDiscovery = wot.discover(discoveryConfigurations);
 
     try {
@@ -80,12 +89,29 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final thingDescriptions = ref.watch(thingDescriptionProvider);
 
-    const discoveryButtonIcon = Icon(Icons.travel_explore);
-
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _startDiscovery(context),
-        child: discoveryButtonIcon,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () => _startDiscovery(context),
+            heroTag: "btn1",
+            child: const Icon(Icons.travel_explore),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          FloatingActionButton(
+            onPressed: () {
+              final thingDescriptionNotifier =
+                  ref.read(thingDescriptionProvider.notifier);
+
+              thingDescriptionNotifier.clear();
+            },
+            heroTag: "btn2",
+            child: const Icon(Icons.clear),
+          ),
+        ],
       ),
       appBar: AppBar(
         title: Text(widget.title),

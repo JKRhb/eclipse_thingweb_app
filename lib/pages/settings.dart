@@ -44,44 +44,46 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           },
           initialValue: methodEnabled.value,
         ),
-        SettingsTile.navigation(
-          title: const Text('Add Discovery URL'),
-          leading: const Icon(Icons.add),
-          onPressed: (context) {
-            context.push(
-              "/form",
-              extra: (
-                discoveryMethod: discoveryMethod,
-                initialUrl: null,
-              ),
-            );
-          },
-        ),
-        ...(discoveryUrls.value ?? <Uri>[]).map(
-          (uri) => SettingsTile(
-            leading: const Icon(Icons.link),
-            title: Text(uri.toString()),
-            trailing: IconButton(
-              onPressed: () {
-                final notifier =
-                    ref.read(discoveryUrlProvider(discoveryMethod).notifier);
-
-                notifier.remove(uri);
-              },
-              icon: const Icon(Icons.remove),
-              tooltip: "Remove Discovery URL",
-            ),
+        if (methodEnabled.value == true)
+          SettingsTile.navigation(
+            title: const Text('Add Discovery URL'),
+            leading: const Icon(Icons.add),
             onPressed: (context) {
               context.push(
                 "/form",
                 extra: (
                   discoveryMethod: discoveryMethod,
-                  initialUrl: uri,
+                  initialUrl: null,
                 ),
               );
             },
           ),
-        ),
+        if (methodEnabled.value == true)
+          ...(discoveryUrls.value ?? <Uri>[]).map(
+            (uri) => SettingsTile(
+              leading: const Icon(Icons.link),
+              title: Text(uri.toString()),
+              trailing: IconButton(
+                onPressed: () {
+                  final notifier =
+                      ref.read(discoveryUrlProvider(discoveryMethod).notifier);
+
+                  notifier.remove(uri);
+                },
+                icon: const Icon(Icons.remove),
+                tooltip: "Remove Discovery URL",
+              ),
+              onPressed: (context) {
+                context.push(
+                  "/form",
+                  extra: (
+                    discoveryMethod: discoveryMethod,
+                    initialUrl: uri,
+                  ),
+                );
+              },
+            ),
+          ),
       ],
     );
   }

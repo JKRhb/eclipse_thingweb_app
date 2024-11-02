@@ -42,7 +42,6 @@ SnackBar _createSuccessSnackbar(String snackbarMessage) {
     content: Text(
       snackbarMessage,
     ),
-    behavior: SnackBarBehavior.floating,
   );
 }
 
@@ -65,6 +64,5 @@ SnackBar _createErrorSnackbar(String errorTitle, String errorMessage) =>
           )
         ],
       ),
-      behavior: SnackBarBehavior.floating,
       backgroundColor: Colors.red,
     );
