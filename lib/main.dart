@@ -10,6 +10,7 @@ import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/pages/events.dart';
 import 'package:eclipse_thingweb_app/pages/forms/discovery_uri_form.dart';
+import 'package:eclipse_thingweb_app/pages/forms/trusted_certificate_form.dart';
 import 'package:eclipse_thingweb_app/pages/thing.dart';
 import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
@@ -21,13 +22,29 @@ import 'dart:developer';
 
 import 'pages/home.dart';
 import 'pages/settings.dart';
+import 'providers/security_settings_provider.dart';
+
+final httpClientConfigProvider = FutureProvider.autoDispose((ref) async {
+  final trustedCertificates =
+      await ref.watch(trustedCertificatesProvider.future);
+
+  return HttpClientConfig(
+    trustedCertificates: trustedCertificates,
+  );
+});
 
 final wotProvider = FutureProvider.autoDispose((ref) async {
-  final servient = Servient.create(clientFactories: [
-    CoapClientFactory(),
-    MqttClientFactory(),
-    HttpClientFactory(),
-  ]);
+  final httpClientConfig = await ref.watch(httpClientConfigProvider.future);
+
+  final servient = Servient.create(
+    clientFactories: [
+      CoapClientFactory(),
+      MqttClientFactory(),
+      HttpClientFactory(
+        httpClientConfig: httpClientConfig,
+      ),
+    ],
+  );
 
   return servient.start();
 });
@@ -102,6 +119,17 @@ class WotApp extends StatelessWidget {
               return DiscoveryUriFormsPage(
                 discoveryParameters.discoveryMethod,
                 initialUrl: discoveryParameters.initialUrl,
+              );
+            },
+          ),
+          GoRoute(
+            path: "/certificate-form",
+            builder: (context, state) {
+              final existingCertificate = state.extra as String?;
+
+              return TrustedCertificateFormPage(
+                "Add a Trusted Certificate",
+                initialValue: existingCertificate,
               );
             },
           ),

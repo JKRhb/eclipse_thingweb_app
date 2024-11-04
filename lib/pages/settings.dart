@@ -4,13 +4,30 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'dart:convert';
+
 import 'package:dart_wot/core.dart';
+import 'package:eclipse_thingweb_app/providers/security_settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/discovery_settings_provider.dart';
+
+const certificate = """
+-----BEGIN CERTIFICATE-----
+MIIBqTCCAU6gAwIBAgIRAIzevxVmNl7O6SEPCZv85m0wCgYIKoZIzj0EAwIwMjET
+MBEGA1UEChMKTUFWRVJJQyBDQTEbMBkGA1UEAxMSTUFWRVJJQyBDQSBSb290IENB
+MB4XDTI0MDUyMTE3NDI0MFoXDTM0MDUxOTE3NDI0MFowMjETMBEGA1UEChMKTUFW
+RVJJQyBDQTEbMBkGA1UEAxMSTUFWRVJJQyBDQSBSb290IENBMFkwEwYHKoZIzj0C
+AQYIKoZIzj0DAQcDQgAEIviRt+k/mPsECvGLoqQGRaiHJcqiq7pctBtnTJkUEXbE
+kup5VZKubveebOsHsMV04twrhV+Ii5OXZzrDAy5ZdqNFMEMwDgYDVR0PAQH/BAQD
+AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFI5Fj37mVhrQByhnbCTg
+aRE0In3zMAoGCCqGSM49BAMCA0kAMEYCIQCNA98Z0r0X8r/2DkosNJL2GTwloiQK
+wOgGqnHNFHkXgQIhAMgvDvU6/QzFd+ihMnCSC/ChM9z5/l9I+OqFUyerjklP
+-----END CERTIFICATE-----
+""";
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({
@@ -120,6 +137,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final mdnsEnabled =
         ref.watch(discoveryMethodEnabledProvider(DiscoveryMethod.mdns)).value ??
             false;
+    final trustedCertificates =
+        ref.watch(trustedCertificatesProvider).value ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -127,6 +146,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
+      // TODO: Move discovery settings to their own page
       body: SettingsList(
         sections: [
           _createUrlSettingsSection(
@@ -138,8 +158,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             DiscoveryMethod.directory,
           ),
           SettingsSection(
+            title: const Text("DNS-SD"),
             tiles: [
-              _createSettingsSectionTitle("DNS-SD", DiscoveryMethod.mdns),
+              _createSettingsSectionTitle(
+                "DNS-SD",
+                DiscoveryMethod.mdns,
+              ),
               if (mdnsEnabled)
                 _createBooleanSettingsTile(
                   mdnsConfigurationProvider(ProtocolType.tcp),
@@ -151,7 +175,45 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   "CoAP-based Discovery",
                 ),
             ],
-          )
+          ),
+          SettingsSection(
+            title: const Text("Security Settings"),
+            tiles: [
+              SettingsTile.navigation(
+                title: const Text('Add Trusted Certificate'),
+                leading: const Icon(Icons.add),
+                onPressed: (context) async {
+                  context.push(
+                    "/certificate-form",
+                    extra: null,
+                  );
+                },
+              ),
+              ...(trustedCertificates).map(
+                (trustedCertificate) => SettingsTile(
+                  leading: const Icon(Icons.link),
+                  title: const Text("Certificate TODO"),
+                  trailing: IconButton(
+                    onPressed: () {
+                      final notifier =
+                          ref.read(trustedCertificatesProvider.notifier);
+
+                      notifier
+                          .remove(utf8.decode(trustedCertificate.certificate));
+                    },
+                    icon: const Icon(Icons.remove),
+                    tooltip: "Remove Discovery URL",
+                  ),
+                  onPressed: (context) {
+                    context.push(
+                      "/certificate-form",
+                      extra: trustedCertificate,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
