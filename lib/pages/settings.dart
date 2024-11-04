@@ -4,6 +4,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'package:dart_wot/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
@@ -21,9 +22,44 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-  _SettingsPageState();
+  SettingsTile _createSettingsSectionTitle(
+    String sectionTitle,
+    DiscoveryMethod discoveryMethod,
+  ) {
+    final methodEnabled =
+        ref.watch(discoveryMethodEnabledProvider(discoveryMethod));
 
-  SettingsSection _createSettingsSection(
+    return SettingsTile.switchTile(
+      title: Text('Use $sectionTitle'),
+      leading: const Icon(Icons.navigation),
+      onToggle: (bool value) async {
+        await ref
+            .read(discoveryMethodEnabledProvider(discoveryMethod).notifier)
+            .toggle();
+      },
+      initialValue: methodEnabled.value,
+    );
+  }
+
+  SettingsTile _createBooleanSettingsTile(
+    AsyncNotifierFamilyProvider booleanProvider,
+    String label,
+  ) {
+    final settingEnabled = ref.watch(booleanProvider);
+
+    return SettingsTile.switchTile(
+      title: Text(label),
+      leading: const Icon(Icons.navigation),
+      onToggle: (bool value) async {
+        final notifier =
+            ref.read(booleanProvider.notifier) as BooleanSettingNotifier;
+        await notifier.toggle();
+      },
+      initialValue: settingEnabled.value,
+    );
+  }
+
+  SettingsSection _createUrlSettingsSection(
     String sectionTitle,
     DiscoveryMethod discoveryMethod,
   ) {
@@ -34,16 +70,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return SettingsSection(
       title: Text(sectionTitle),
       tiles: [
-        SettingsTile.switchTile(
-          title: Text('Use $sectionTitle'),
-          leading: const Icon(Icons.navigation),
-          onToggle: (bool value) async {
-            await ref
-                .read(discoveryMethodEnabledProvider(discoveryMethod).notifier)
-                .toggle();
-          },
-          initialValue: methodEnabled.value,
-        ),
+        _createSettingsSectionTitle(sectionTitle, discoveryMethod),
         if (methodEnabled.value == true)
           SettingsTile.navigation(
             title: const Text('Add Discovery URL'),
@@ -90,6 +117,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final mdnsEnabled =
+        ref.watch(discoveryMethodEnabledProvider(DiscoveryMethod.mdns)).value ??
+            false;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
@@ -98,14 +129,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       ),
       body: SettingsList(
         sections: [
-          _createSettingsSection(
+          _createUrlSettingsSection(
             "Direct Discovery",
             DiscoveryMethod.direct,
           ),
-          _createSettingsSection(
+          _createUrlSettingsSection(
             "Directory Discovery",
             DiscoveryMethod.directory,
           ),
+          SettingsSection(
+            tiles: [
+              _createSettingsSectionTitle("DNS-SD", DiscoveryMethod.mdns),
+              if (mdnsEnabled)
+                _createBooleanSettingsTile(
+                  mdnsConfigurationProvider(ProtocolType.tcp),
+                  "HTTP-based Discovery",
+                ),
+              if (mdnsEnabled)
+                _createBooleanSettingsTile(
+                  mdnsConfigurationProvider(ProtocolType.udp),
+                  "CoAP-based Discovery",
+                ),
+            ],
+          )
         ],
       ),
     );

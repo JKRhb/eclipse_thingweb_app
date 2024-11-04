@@ -11,11 +11,17 @@ import 'settings_provider.dart';
 
 enum DiscoveryMethod {
   direct,
-  directory;
+  directory,
+  mdns,
+  ;
 
   String get discoveryMethodSettingsKey => "discoveryMethod:$name";
 
   String get discoveryUrlSettingsKey => "discoveryUrl:$name";
+}
+
+extension DiscoverySettingsKey on ProtocolType {
+  String get protocolTypeSettingsKey => "protocolType:$name";
 }
 
 final discoveryMethodEnabledProvider = AsyncNotifierProvider.family<
@@ -24,25 +30,9 @@ final discoveryMethodEnabledProvider = AsyncNotifierProvider.family<
     DiscoveryMethod>(DiscoveryMethodEnabledNotifier.new);
 
 class DiscoveryMethodEnabledNotifier
-    extends FamilyAsyncNotifier<bool, DiscoveryMethod> {
-  String get _settingsKey => arg.discoveryMethodSettingsKey;
-
+    extends BooleanSettingNotifier<DiscoveryMethod> {
   @override
-  Future<bool> build(DiscoveryMethod arg) async {
-    final value =
-        await ref.watch(booleanPreferencesProvider(_settingsKey).future);
-
-    return value ?? false;
-  }
-
-  Future<void> toggle() async {
-    final provider = booleanPreferencesProvider(_settingsKey);
-
-    final notifier = ref.read(provider.notifier);
-    final value = (await ref.watch(provider.future)) ?? false;
-
-    notifier.write(!value);
-  }
+  String get _settingsKey => arg.discoveryMethodSettingsKey;
 }
 
 final discoveryUrlProvider = AsyncNotifierProvider.family<DiscoveryUrlNotifier,
@@ -76,6 +66,37 @@ class DiscoveryUrlNotifier
   Future<void> remove(Uri uri) async => await _notifier.remove(uri.toString());
 }
 
+final mdnsConfigurationProvider =
+    AsyncNotifierProvider.family<MdnsConfigurationNotifier, bool, ProtocolType>(
+        MdnsConfigurationNotifier.new);
+
+abstract class BooleanSettingNotifier<T> extends FamilyAsyncNotifier<bool, T> {
+  String get _settingsKey;
+
+  @override
+  Future<bool> build(T arg) async {
+    final value =
+        await ref.watch(booleanPreferencesProvider(_settingsKey).future);
+
+    return value ?? false;
+  }
+
+  Future<void> toggle() async {
+    final provider = booleanPreferencesProvider(_settingsKey);
+
+    final notifier = ref.read(provider.notifier);
+    final value = (await ref.watch(provider.future)) ?? false;
+
+    notifier.write(!value);
+  }
+}
+
+final class MdnsConfigurationNotifier
+    extends BooleanSettingNotifier<ProtocolType> {
+  @override
+  String get _settingsKey => arg.protocolTypeSettingsKey;
+}
+
 final discoveryConfigurationsProvider = FutureProvider((ref) async {
   final result = <DiscoveryConfiguration>[];
 
@@ -83,6 +104,8 @@ final discoveryConfigurationsProvider = FutureProvider((ref) async {
       .watch(discoveryMethodEnabledProvider(DiscoveryMethod.direct).future);
   final directoryDiscoveryEnabled = await ref
       .watch(discoveryMethodEnabledProvider(DiscoveryMethod.directory).future);
+  final mdnsDiscoveryEnabled = await ref
+      .watch(discoveryMethodEnabledProvider(DiscoveryMethod.mdns).future);
 
   if (directDiscoveryEnabled) {
     final directDiscoveryUrls =
@@ -103,6 +126,30 @@ final discoveryConfigurationsProvider = FutureProvider((ref) async {
         ),
       ),
     );
+  }
+
+  if (mdnsDiscoveryEnabled) {
+    // TODO: Consider discovering TDDs in the future as well and allowing the
+    //       setting of the other DNS-SD parameters.
+
+    final mdnsCoapDiscoveryEnabled =
+        await ref.watch(mdnsConfigurationProvider(ProtocolType.udp).future);
+    final mdnsHttpDiscoveryEnabled =
+        await ref.watch(mdnsConfigurationProvider(ProtocolType.udp).future);
+
+    if (mdnsCoapDiscoveryEnabled) {
+      result.add(
+        const DnsSdDConfiguration(
+          protocolType: ProtocolType.udp,
+        ),
+      );
+    }
+
+    if (mdnsHttpDiscoveryEnabled) {
+      result.add(
+        const DnsSdDConfiguration(),
+      );
+    }
   }
 
   return result;

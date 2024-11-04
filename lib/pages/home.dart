@@ -88,6 +88,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final thingDescriptions = ref.watch(thingDescriptionProvider);
+    final hasThingDescriptions = thingDescriptions.isNotEmpty;
 
     return Scaffold(
       floatingActionButton: Column(
@@ -98,19 +99,21 @@ class _HomePageState extends ConsumerState<HomePage> {
             heroTag: "btn1",
             child: const Icon(Icons.travel_explore),
           ),
-          const SizedBox(
-            height: 10,
-          ),
-          FloatingActionButton(
-            onPressed: () {
-              final thingDescriptionNotifier =
-                  ref.read(thingDescriptionProvider.notifier);
+          if (hasThingDescriptions)
+            const SizedBox(
+              height: 10,
+            ),
+          if (hasThingDescriptions)
+            FloatingActionButton(
+              onPressed: () {
+                final thingDescriptionNotifier =
+                    ref.read(thingDescriptionProvider.notifier);
 
-              thingDescriptionNotifier.clear();
-            },
-            heroTag: "btn2",
-            child: const Icon(Icons.clear),
-          ),
+                thingDescriptionNotifier.clear();
+              },
+              heroTag: "btn2",
+              child: const Icon(Icons.clear),
+            ),
         ],
       ),
       appBar: AppBar(
@@ -148,8 +151,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     if (!context.mounted) {
                       return;
                     }
-
-                    ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
                     context.push(
                       "/thing",
