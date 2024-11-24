@@ -17,7 +17,7 @@ class TrustedCertificateFormPage extends ConsumerStatefulWidget {
 
   final String _title;
 
-  final String? initialValue;
+  final LabeledCertificate? initialValue;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -28,11 +28,21 @@ class TrustedCertificateFormPageState
     extends ConsumerState<TrustedCertificateFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final _formFieldTextEditingController = TextEditingController();
+  late final TextEditingController _formFieldTextEditingController;
 
-  final _labelTextEditingController = TextEditingController();
+  late final TextEditingController _labelTextEditingController;
 
-  String? get _initialValue => widget.initialValue;
+  LabeledCertificate? get _initialValue => widget.initialValue;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _formFieldTextEditingController =
+        TextEditingController(text: _initialValue?.certificate.certificate);
+    _labelTextEditingController =
+        TextEditingController(text: _initialValue?.label);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +60,7 @@ class TrustedCertificateFormPageState
             TextFormField(
               maxLines: 10,
               decoration: const InputDecoration(
-                // hintText: 'Certificate',
                 labelText: 'Certificate',
-                // floatingLabelBehavior: FloatingLabelBehavior.never,
               ),
               controller: _formFieldTextEditingController,
               validator: (value) {
@@ -90,14 +98,17 @@ class TrustedCertificateFormPageState
                     final notifier =
                         ref.read(trustedCertificatesProvider.notifier);
 
-                    final newValue = _formFieldTextEditingController.text;
+                    final certificate = _formFieldTextEditingController.text;
                     final label = _labelTextEditingController.text;
 
                     final initialValue = _initialValue;
                     if (initialValue == null) {
-                      await notifier.add(newValue);
+                      await notifier.add(label, certificate);
+                    } else if (initialValue.label == label) {
+                      await notifier.replace(label, certificate);
                     } else {
-                      await notifier.replace(initialValue, newValue);
+                      await notifier.remove(initialValue.label);
+                      await notifier.add(label, certificate);
                     }
 
                     if (!context.mounted) {

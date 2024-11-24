@@ -4,8 +4,6 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'dart:convert';
-
 import 'package:dart_wot/core.dart';
 import 'package:eclipse_thingweb_app/providers/security_settings_provider.dart';
 import 'package:flutter/material.dart';
@@ -14,20 +12,6 @@ import 'package:flutter_settings_ui/flutter_settings_ui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/discovery_settings_provider.dart';
-
-const certificate = """
------BEGIN CERTIFICATE-----
-MIIBqTCCAU6gAwIBAgIRAIzevxVmNl7O6SEPCZv85m0wCgYIKoZIzj0EAwIwMjET
-MBEGA1UEChMKTUFWRVJJQyBDQTEbMBkGA1UEAxMSTUFWRVJJQyBDQSBSb290IENB
-MB4XDTI0MDUyMTE3NDI0MFoXDTM0MDUxOTE3NDI0MFowMjETMBEGA1UEChMKTUFW
-RVJJQyBDQTEbMBkGA1UEAxMSTUFWRVJJQyBDQSBSb290IENBMFkwEwYHKoZIzj0C
-AQYIKoZIzj0DAQcDQgAEIviRt+k/mPsECvGLoqQGRaiHJcqiq7pctBtnTJkUEXbE
-kup5VZKubveebOsHsMV04twrhV+Ii5OXZzrDAy5ZdqNFMEMwDgYDVR0PAQH/BAQD
-AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFI5Fj37mVhrQByhnbCTg
-aRE0In3zMAoGCCqGSM49BAMCA0kAMEYCIQCNA98Z0r0X8r/2DkosNJL2GTwloiQK
-wOgGqnHNFHkXgQIhAMgvDvU6/QzFd+ihMnCSC/ChM9z5/l9I+OqFUyerjklP
------END CERTIFICATE-----
-""";
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({
@@ -192,17 +176,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ...(trustedCertificates).map(
                 (trustedCertificate) => SettingsTile(
                   leading: const Icon(Icons.link),
-                  title: const Text("Certificate TODO"),
+                  title: Text(trustedCertificate.label),
                   trailing: IconButton(
                     onPressed: () {
                       final notifier =
                           ref.read(trustedCertificatesProvider.notifier);
 
-                      notifier
-                          .remove(utf8.decode(trustedCertificate.certificate));
+                      notifier.remove(trustedCertificate.label);
                     },
                     icon: const Icon(Icons.remove),
-                    tooltip: "Remove Discovery URL",
+                    tooltip: "Remove Certificate",
                   ),
                   onPressed: (context) {
                     context.push(

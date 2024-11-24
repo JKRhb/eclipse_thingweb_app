@@ -4,56 +4,76 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'dart:convert';
-
 import 'package:eclipse_thingweb_app/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _trustedSecuritySettingsKey = "trusted-certificates";
 
+final _labelSettingsProvider =
+    stringListPreferencesProvider(_trustedSecuritySettingsKey);
+
 typedef Certificate = ({
-  List<int> certificate,
+  String certificate,
   String? password,
 });
 
+typedef LabeledCertificate = ({String label, Certificate certificate});
+
 final trustedCertificatesProvider =
-    AsyncNotifierProvider<TrustedCertficatesNotifier, List<Certificate>>(
+    AsyncNotifierProvider<TrustedCertficatesNotifier, List<LabeledCertificate>>(
         TrustedCertficatesNotifier.new);
 
-class TrustedCertficatesNotifier extends AsyncNotifier<List<Certificate>> {
+class TrustedCertficatesNotifier
+    extends AsyncNotifier<List<LabeledCertificate>> {
   @override
-  Future<List<Certificate>> build() async {
-    final value = await ref.watch(
-        stringListPreferencesProvider(_trustedSecuritySettingsKey).future);
+  Future<List<LabeledCertificate>> build() async {
+    final value = await ref.watch(_labelSettingsProvider.future);
 
-    return value
-            ?.map(
-              (certificate) => (
-                certificate: utf8.encode(certificate).toList(),
-                password: null
-              ),
-            )
-            .toList() ??
-        [];
+    final result = <LabeledCertificate>[];
+
+    for (final label in value ?? []) {
+      final certificate =
+          ref.read(stringPreferencesProvider("certificate-$label")).value;
+
+      if (certificate != null) {
+        result.add((
+          label: label,
+          certificate: (certificate: certificate, password: null)
+        ));
+      }
+    }
+
+    return result;
   }
 
-  Future<void> add(String certificate) async {
-    final stringListPreferenceNotifier = ref.read(
-        stringListPreferencesProvider(_trustedSecuritySettingsKey).notifier);
-    await stringListPreferenceNotifier.add(certificate);
+  Future<void> add(String label, String newCertificate) async {
+    final settingsKey = "certificate-$label";
+
+    final labelStringPreferenceNotifier =
+        ref.read(_labelSettingsProvider.notifier);
+
+    final certificateStringListPreferenceNotifier =
+        ref.read(stringPreferencesProvider(settingsKey).notifier);
+
+    await certificateStringListPreferenceNotifier.write(newCertificate);
+    await labelStringPreferenceNotifier.add(label);
   }
 
-  Future<void> replace(String oldCertificate, String newCertificate) async {
-    final stringListPreferenceNotifier = ref.read(
-        stringListPreferencesProvider(_trustedSecuritySettingsKey).notifier);
+  Future<void> replace(String label, String newCertificate) async {
+    final settingsKey = "certificate-$label";
 
-    await stringListPreferenceNotifier.replace(oldCertificate, newCertificate);
+    await ref
+        .read(stringPreferencesProvider(settingsKey).notifier)
+        .write(newCertificate);
   }
 
-  Future<void> remove(String certificate) async {
+  Future<void> remove(String label) async {
+    final settingsKey = "certificate-$label";
+
     final stringListPreferenceNotifier = ref.read(
         stringListPreferencesProvider(_trustedSecuritySettingsKey).notifier);
 
-    await stringListPreferenceNotifier.remove(certificate);
+    await stringListPreferenceNotifier.remove(label);
+    await ref.read(stringPreferencesProvider(settingsKey).notifier).remove();
   }
 }

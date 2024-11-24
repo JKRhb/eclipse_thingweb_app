@@ -4,6 +4,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'dart:convert';
+
 import 'package:dart_wot/binding_coap.dart';
 import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
@@ -25,11 +27,17 @@ import 'pages/settings.dart';
 import 'providers/security_settings_provider.dart';
 
 final httpClientConfigProvider = FutureProvider.autoDispose((ref) async {
-  final trustedCertificates =
+  final labeledCertificates =
       await ref.watch(trustedCertificatesProvider.future);
 
   return HttpClientConfig(
-    trustedCertificates: trustedCertificates,
+    trustedCertificates: labeledCertificates
+        .map((labeledCertificate) => (
+              certificate:
+                  utf8.encode(labeledCertificate.certificate.certificate),
+              password: labeledCertificate.certificate.password
+            ))
+        .toList(),
   );
 });
 
@@ -125,7 +133,7 @@ class WotApp extends StatelessWidget {
           GoRoute(
             path: "/certificate-form",
             builder: (context, state) {
-              final existingCertificate = state.extra as String?;
+              final existingCertificate = state.extra as LabeledCertificate?;
 
               return TrustedCertificateFormPage(
                 "Add a Trusted Certificate",
