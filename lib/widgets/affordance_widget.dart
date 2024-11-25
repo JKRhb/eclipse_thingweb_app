@@ -37,10 +37,16 @@ abstract base class AffordanceWidget extends ConsumerStatefulWidget {
     switch (interactionAffordance) {
       case dart_wot.Action():
         return ActionWidget(
-            consumedThing, affordanceKey, interactionAffordance,);
+          consumedThing,
+          affordanceKey,
+          interactionAffordance,
+        );
       case Property():
         return PropertyWidget(
-            consumedThing, affordanceKey, interactionAffordance,);
+          consumedThing,
+          affordanceKey,
+          interactionAffordance,
+        );
       case Event():
         return EventWidget(consumedThing, affordanceKey, interactionAffordance);
     }
