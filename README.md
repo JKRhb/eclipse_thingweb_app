@@ -1,4 +1,4 @@
-# eclipse_thingweb_demo_app
+# Eclipse Thingweb App
 
 A new Flutter project.
 

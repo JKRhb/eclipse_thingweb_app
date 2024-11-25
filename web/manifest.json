@@ -1,6 +1,6 @@
 {
-    "name": "eclipse_thingweb_demo_app",
-    "short_name": "eclipse_thingweb_demo_app",
+    "name": "eclipse_thingweb_app",
+    "short_name": "eclipse_thingweb_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hexcode",

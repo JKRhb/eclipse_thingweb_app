@@ -4,8 +4,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_demo_app/main.dart';
-import 'package:eclipse_thingweb_demo_app/widgets/input_form.dart';
+import 'package:eclipse_thingweb_app/main.dart';
+import 'package:eclipse_thingweb_app/widgets/input_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
