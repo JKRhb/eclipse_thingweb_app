@@ -4,10 +4,11 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:go_router/go_router.dart";
+
+import "../providers/event_notifications_provider.dart";
 
 class EventsPage extends ConsumerStatefulWidget {
   const EventsPage({super.key});
@@ -18,10 +19,7 @@ class EventsPage extends ConsumerStatefulWidget {
 
 class EventsPageState extends ConsumerState<EventsPage> {
   void _markAllAsRead() {
-    final eventNotificationNotifier =
-        ref.read(eventNotificationProvider.notifier);
-
-    eventNotificationNotifier.markAllAsRead();
+    ref.read(eventNotificationProvider.notifier).markAllAsRead();
   }
 
   @override

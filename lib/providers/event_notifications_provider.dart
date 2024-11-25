@@ -4,8 +4,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
 class EventNotification {
   EventNotification({

@@ -4,8 +4,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:flutter/material.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter/material.dart";
 
 class ThingIcon extends StatelessWidget {
   const ThingIcon(

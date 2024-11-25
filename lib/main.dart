@@ -4,66 +4,22 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'dart:convert';
+import "dart:developer";
 
-import 'package:dart_wot/binding_coap.dart';
-import 'package:dart_wot/binding_mqtt.dart';
-import 'package:dart_wot/binding_http.dart';
-import 'package:dart_wot/core.dart';
+import "package:dart_wot/core.dart";
+import "package:flex_seed_scheme/flex_seed_scheme.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:go_router/go_router.dart";
 
-import 'package:eclipse_thingweb_app/pages/events.dart';
-import 'package:eclipse_thingweb_app/pages/forms/discovery_uri_form.dart';
-import 'package:eclipse_thingweb_app/pages/forms/trusted_certificate_form.dart';
-import 'package:eclipse_thingweb_app/pages/thing.dart';
-import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
-import 'package:flex_seed_scheme/flex_seed_scheme.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import 'dart:developer';
-
-import 'pages/home.dart';
-import 'pages/settings.dart';
-import 'providers/security_settings_provider.dart';
-
-final httpClientConfigProvider = FutureProvider.autoDispose((ref) async {
-  final labeledCertificates =
-      await ref.watch(trustedCertificatesProvider.future);
-
-  return HttpClientConfig(
-    trustedCertificates: labeledCertificates
-        .map((labeledCertificate) => (
-              certificate:
-                  utf8.encode(labeledCertificate.certificate.certificate),
-              password: labeledCertificate.certificate.password
-            ))
-        .toList(),
-  );
-});
-
-final wotProvider = FutureProvider.autoDispose((ref) async {
-  final httpClientConfig = await ref.watch(httpClientConfigProvider.future);
-
-  final servient = Servient.create(
-    clientFactories: [
-      CoapClientFactory(),
-      MqttClientFactory(),
-      HttpClientFactory(
-        httpClientConfig: httpClientConfig,
-      ),
-    ],
-  );
-
-  return servient.start();
-});
-
-final consumedThingProvider = FutureProvider.autoDispose
-    .family<ConsumedThing, ThingDescription>((ref, thingDescription) async {
-  final wot = await ref.watch(wotProvider.future);
-
-  return wot.consume(thingDescription);
-});
+import "pages/events.dart";
+import "pages/forms/discovery_uri_form.dart";
+import "pages/forms/trusted_certificate_form.dart";
+import "pages/home.dart";
+import "pages/settings.dart";
+import "pages/thing.dart";
+import "providers/discovery_settings_provider.dart";
+import "providers/security_settings_provider.dart";
 
 Future<void> main() async {
   log("Starting app.");
@@ -91,7 +47,6 @@ class WotApp extends StatelessWidget {
     const thingwebSecondary = Color(0x00B84A91);
 
     final colorScheme = SeedColorScheme.fromSeeds(
-      brightness: Brightness.light,
       primaryKey: thingwebPrimary,
       secondaryKey: thingwebSecondary,
       tones: FlexTones.vivid(Brightness.light),
@@ -106,7 +61,7 @@ class WotApp extends StatelessWidget {
       routerConfig: GoRouter(
         routes: [
           GoRoute(
-            path: '/',
+            path: "/",
             builder: (context, state) => const HomePage(
               title: title,
             ),
@@ -123,7 +78,7 @@ class WotApp extends StatelessWidget {
             path: "/form",
             builder: (context, state) {
               final discoveryParameters =
-                  state.extra as _DiscoveryUriFormsParameter;
+                  state.extra! as _DiscoveryUriFormsParameter;
 
               return DiscoveryUriFormsPage(
                 discoveryParameters.discoveryMethod,
@@ -143,9 +98,9 @@ class WotApp extends StatelessWidget {
             },
           ),
           GoRoute(
-            path: '/thing',
+            path: "/thing",
             builder: (context, state) {
-              final data = state.extra as ThingDescription;
+              final data = state.extra! as ThingDescription;
 
               return ThingPage(
                 data,

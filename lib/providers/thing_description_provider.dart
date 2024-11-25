@@ -4,8 +4,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
 class _ThingDescriptionNotifier extends Notifier<List<ThingDescription>> {
   @override
@@ -16,7 +16,8 @@ class _ThingDescriptionNotifier extends Notifier<List<ThingDescription>> {
   void addThingDescription(ThingDescription thingDescription) {
     if (thingDescription.id == null) {
       throw Exception(
-        "Thing Description with title ${thingDescription.title} does not contain an ID.",
+        "Thing Description with title ${thingDescription.title} does not "
+        "contain an ID.",
       );
     }
 

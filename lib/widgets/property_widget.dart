@@ -43,17 +43,21 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
         ref.read(subscriptionStateProvider.notifier);
 
     final hasSubscription = subscriptionStateNotifier.hasSubscription(
-        _consumedThing, SubscriptionType.property, _propertyKey);
+      _consumedThing,
+      SubscriptionType.property,
+      _propertyKey,
+    );
 
     if (hasSubscription) {
-      subscriptionStateNotifier.removeSubscriptionState(
-          _consumedThing.thingDescription.id!,
-          SubscriptionType.property,
-          _propertyKey);
+      await subscriptionStateNotifier.removeSubscriptionState(
+        _consumedThing.thingDescription.id!,
+        SubscriptionType.property,
+        _propertyKey,
+      );
       return;
     }
 
-    subscriptionStateNotifier.addPropertySubscription(
+    await subscriptionStateNotifier.addPropertySubscription(
       _consumedThing,
       _propertyKey,
     );
@@ -95,7 +99,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
           name: "_PropertyState",
           error: error,
         );
-        return const Text('Failed to retrieve the property value.');
+        return const Text("Failed to retrieve the property value.");
       case AsyncData(:final value):
         return Text(value.toString());
       default:

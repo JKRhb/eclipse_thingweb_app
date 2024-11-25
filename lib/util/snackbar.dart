@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 /// Displays a [SnackBar] with a [successMessage] within the current [context].
 ///
@@ -25,7 +25,7 @@ void displaySuccessMessageSnackbar(
 /// Before the message is displayed, the current [SnackBar] is going to be
 /// removed.
 void displayErrorMessageSnackbar(
-    BuildContext context, String errorTitle, String errorMessage) {
+    BuildContext context, String errorTitle, String errorMessage,) {
   final snackbar = _createErrorSnackbar(errorTitle, errorMessage);
 
   _displaySnackbarMessage(context, snackbar);
@@ -61,7 +61,7 @@ SnackBar _createErrorSnackbar(String errorTitle, String errorMessage) =>
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-          )
+          ),
         ],
       ),
       backgroundColor: Colors.red,

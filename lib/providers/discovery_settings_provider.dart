@@ -4,10 +4,10 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import 'settings_provider.dart';
+import "settings_provider.dart";
 
 enum DiscoveryMethod {
   direct,
@@ -68,7 +68,8 @@ class DiscoveryUrlNotifier
 
 final mdnsConfigurationProvider =
     AsyncNotifierProvider.family<MdnsConfigurationNotifier, bool, ProtocolType>(
-        MdnsConfigurationNotifier.new);
+  MdnsConfigurationNotifier.new,
+);
 
 abstract class BooleanSettingNotifier<T> extends FamilyAsyncNotifier<bool, T> {
   String get _settingsKey;
@@ -87,7 +88,7 @@ abstract class BooleanSettingNotifier<T> extends FamilyAsyncNotifier<bool, T> {
     final notifier = ref.read(provider.notifier);
     final value = (await ref.watch(provider.future)) ?? false;
 
-    notifier.write(!value);
+    await notifier.write(!value);
   }
 }
 
@@ -111,7 +112,7 @@ final discoveryConfigurationsProvider = FutureProvider((ref) async {
     final directDiscoveryUrls =
         await ref.watch(discoveryUrlProvider(DiscoveryMethod.direct).future);
 
-    result.addAll(directDiscoveryUrls.map((url) => DirectConfiguration(url)));
+    result.addAll(directDiscoveryUrls.map(DirectConfiguration.new));
   }
 
   if (directoryDiscoveryEnabled) {
@@ -121,9 +122,7 @@ final discoveryConfigurationsProvider = FutureProvider((ref) async {
     result.addAll(
       directoryDiscoveryUrls.map(
         // TODO: Also set the other parameters here
-        (url) => ExploreDirectoryConfiguration(
-          url,
-        ),
+        ExploreDirectoryConfiguration.new,
       ),
     );
   }

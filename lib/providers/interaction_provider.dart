@@ -4,9 +4,10 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:eclipse_thingweb_app/providers/affordance_state_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+
+import "affordance_state_provider.dart";
 
 final readPropertyProvider = FutureProvider.autoDispose
     .family<Object?, (ConsumedThing, String)>((ref, input) async {
@@ -17,13 +18,15 @@ final readPropertyProvider = FutureProvider.autoDispose
   final value = await interactionOutput.value();
 
   ref
-      .read(affordanceStateHistoryProvider(
-        (
-          thingDescriptionId: consumedThing.thingDescription.id!,
-          affordanceKey: propertyName,
-          affordanceType: AffordanceType.property,
-        ),
-      ).notifier)
+      .read(
+        affordanceStateHistoryProvider(
+          (
+            thingDescriptionId: consumedThing.thingDescription.id!,
+            affordanceKey: propertyName,
+            affordanceType: AffordanceType.property,
+          ),
+        ).notifier,
+      )
       .update(value);
 
   return value;
@@ -49,7 +52,7 @@ final invokeActionProvider = FutureProvider.autoDispose
           affordanceKey: actionName,
           affordanceType: AffordanceType.action,
         ),
-      ).notifier)
+      ).notifier,)
       .update(value);
 
   return value;

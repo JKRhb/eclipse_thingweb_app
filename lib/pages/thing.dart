@@ -4,13 +4,14 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/main.dart';
-import 'package:eclipse_thingweb_app/widgets/affordance_widget.dart';
-import 'package:eclipse_thingweb_app/widgets/thing_icon.dart';
-import 'package:flutter/material.dart';
-import 'package:dart_wot/core.dart';
-import 'package:dart_wot/core.dart' as dart_wot;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:dart_wot/core.dart" as dart_wot;
+import "package:dart_wot/core.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+
+import "../providers/wot_providers.dart";
+import "../widgets/affordance_widget.dart";
+import "../widgets/thing_icon.dart";
 
 /// A page that lists all the interaction affordances of a Thing listed within
 /// its [_thingDescription].
@@ -100,7 +101,7 @@ class _ThingPageState extends ConsumerState<ThingPage> {
                       for (final (fieldName, fieldData) in [
                         ("Description", description),
                         ("ID", id),
-                        ("Version", version)
+                        ("Version", version),
                       ])
                         if (fieldData != null)
                           _formatTableRow(fieldName, fieldData),
@@ -133,7 +134,7 @@ class _ThingPageState extends ConsumerState<ThingPage> {
               )
               .toList(),
         ),
-      AsyncError(:final error) => throw error,
+      AsyncError(:final error) => throw Exception(error.toString()),
       _ => const CircularProgressIndicator(),
     };
   }
