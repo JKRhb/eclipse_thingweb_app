@@ -4,9 +4,10 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+
+import "../../providers/discovery_settings_provider.dart";
 
 class DiscoveryUriFormsPage extends ConsumerStatefulWidget {
   const DiscoveryUriFormsPage(
@@ -60,64 +61,64 @@ class FormsPageState extends ConsumerState<DiscoveryUriFormsPage> {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       body: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(10.0),
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Discovery URL',
-                ),
-                controller: _formFieldTextEditingController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a URI.';
-                  }
-
-                  final uri = Uri.tryParse(value);
-
-                  if (uri == null) {
-                    return "Please enter a valid URI.";
-                  }
-
-                  if (!uri.isAbsolute) {
-                    return "Please enter an absolute URI.";
-                  }
-
-                  return null;
-                },
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(10.0),
+          children: [
+            TextFormField(
+              decoration: const InputDecoration(
+                labelText: "Discovery URL",
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      final notifier = ref.read(
-                          discoveryUrlProvider(widget._discoveryMethod)
-                              .notifier);
+              controller: _formFieldTextEditingController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter a URI.";
+                }
 
-                      final uri =
-                          Uri.parse(_formFieldTextEditingController.text);
+                final uri = Uri.tryParse(value);
 
-                      final initialUrl = _initialUrl;
-                      if (initialUrl == null) {
-                        await notifier.add(uri);
-                      } else {
-                        await notifier.replace(initialUrl, uri);
-                      }
+                if (uri == null) {
+                  return "Please enter a valid URI.";
+                }
 
-                      if (!context.mounted) {
-                        return;
-                      }
+                if (!uri.isAbsolute) {
+                  return "Please enter an absolute URI.";
+                }
 
-                      Navigator.of(context).pop();
+                return null;
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    final notifier = ref.read(
+                      discoveryUrlProvider(widget._discoveryMethod).notifier,
+                    );
+
+                    final uri = Uri.parse(_formFieldTextEditingController.text);
+
+                    final initialUrl = _initialUrl;
+                    if (initialUrl == null) {
+                      await notifier.add(uri);
+                    } else {
+                      await notifier.replace(initialUrl, uri);
                     }
-                  },
-                  child: const Text('Submit'),
-                ),
+
+                    if (!context.mounted) {
+                      return;
+                    }
+
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: const Text("Submit"),
               ),
-            ],
-          )),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -22,7 +22,7 @@ final class EventWidget extends AffordanceWidget {
 }
 
 final class _EventState extends _AffordanceState<EventWidget> {
-  void _subscribeToEvent() async {
+  Future<void> _subscribeToEvent() async {
     final subscriptionState = ref.read(
       subscriptionStateProvider.notifier,
     );
@@ -81,7 +81,7 @@ final class _EventState extends _AffordanceState<EventWidget> {
         icon: Icon(
           !subscribed ? Icons.play_arrow : Icons.stop,
         ),
-      )
+      ),
     ];
   }
 }

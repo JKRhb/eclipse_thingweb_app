@@ -4,9 +4,10 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import '../../providers/security_settings_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+
+import "../../providers/security_settings_provider.dart";
 
 class TrustedCertificateFormPage extends ConsumerStatefulWidget {
   const TrustedCertificateFormPage(
@@ -60,12 +61,12 @@ class TrustedCertificateFormPageState
             TextFormField(
               maxLines: 10,
               decoration: const InputDecoration(
-                labelText: 'Certificate',
+                labelText: "Certificate",
               ),
               controller: _formFieldTextEditingController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please insert a certificate.';
+                  return "Please insert a certificate.";
                 }
 
                 // TODO: Add better validation
@@ -79,12 +80,12 @@ class TrustedCertificateFormPageState
             ),
             TextFormField(
               decoration: const InputDecoration(
-                labelText: 'Label',
+                labelText: "Label",
               ),
               controller: _labelTextEditingController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please insert a label.';
+                  return "Please insert a label.";
                 }
 
                 return null;
@@ -118,7 +119,7 @@ class TrustedCertificateFormPageState
                     Navigator.of(context).pop();
                   }
                 },
-                child: const Text('Submit'),
+                child: const Text("Submit"),
               ),
             ),
           ],

@@ -4,11 +4,11 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import 'affordance_state_provider.dart';
-import 'event_notifications_provider.dart';
+import "affordance_state_provider.dart";
+import "event_notifications_provider.dart";
 
 class SubscriptionState {
   SubscriptionState(
@@ -43,7 +43,7 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
               subscriptionState.thingDescriptionId ==
                   consumedThing.thingDescription.id! &&
               subscriptionState.subscriptionType == subscriptionType &&
-              subscriptionState.affordanceKey == affordanceKey)
+              subscriptionState.affordanceKey == affordanceKey,)
           .isNotEmpty;
 
   Future<void> addEventSubscription(
@@ -70,7 +70,7 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
       SubscriptionState(subscription,
           thingDescriptionId: consumedThing.thingDescription.id!,
           subscriptionType: SubscriptionType.event,
-          affordanceKey: affordanceKey)
+          affordanceKey: affordanceKey,),
     ];
   }
 
@@ -88,7 +88,7 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
               thingDescriptionId: consumedThing.thingDescription.id!,
               affordanceKey: affordanceKey,
               affordanceType: AffordanceType.property,
-            )).notifier)
+            ),).notifier,)
             .update(value.toDouble());
       }
     });
@@ -98,7 +98,7 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
       SubscriptionState(subscription,
           thingDescriptionId: consumedThing.thingDescription.id!,
           subscriptionType: SubscriptionType.property,
-          affordanceKey: affordanceKey)
+          affordanceKey: affordanceKey,),
     ];
   }
 

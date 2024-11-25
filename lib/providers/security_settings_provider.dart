@@ -4,8 +4,9 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/providers/settings_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+
+import "settings_provider.dart";
 
 const _trustedSecuritySettingsKey = "trusted-certificates-key";
 
@@ -21,7 +22,8 @@ typedef LabeledCertificate = ({String label, Certificate certificate});
 
 final trustedCertificatesProvider =
     AsyncNotifierProvider<TrustedCertficatesNotifier, List<LabeledCertificate>>(
-        TrustedCertficatesNotifier.new);
+  TrustedCertficatesNotifier.new,
+);
 
 class TrustedCertficatesNotifier
     extends AsyncNotifier<List<LabeledCertificate>> {
@@ -36,10 +38,12 @@ class TrustedCertficatesNotifier
           ref.read(stringPreferencesProvider("certificate-$label")).value;
 
       if (certificate != null) {
-        result.add((
-          label: label,
-          certificate: (certificate: certificate, password: null)
-        ));
+        result.add(
+          (
+            label: label,
+            certificate: (certificate: certificate, password: null)
+          ),
+        );
       }
     }
 
@@ -71,7 +75,8 @@ class TrustedCertficatesNotifier
     final settingsKey = "certificate-$label";
 
     final stringListPreferenceNotifier = ref.read(
-        stringListPreferencesProvider(_trustedSecuritySettingsKey).notifier);
+      stringListPreferencesProvider(_trustedSecuritySettingsKey).notifier,
+    );
 
     await stringListPreferenceNotifier.remove(label);
     await ref.read(stringPreferencesProvider(settingsKey).notifier).remove();

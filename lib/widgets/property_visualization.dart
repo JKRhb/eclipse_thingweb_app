@@ -4,13 +4,14 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'dart:math';
+import "dart:math";
 
-import 'package:dart_wot/core.dart';
-import 'package:eclipse_thingweb_app/providers/affordance_state_provider.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import "package:dart_wot/core.dart";
+import "package:fl_chart/fl_chart.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+
+import "../providers/affordance_state_provider.dart";
 
 class PropertyVisualization extends StatelessWidget {
   const PropertyVisualization(
@@ -112,7 +113,7 @@ class PropertyVisualization extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      title: const Text('Data Visualization'),
+      title: const Text("Data Visualization"),
       children: [
         AspectRatio(
           aspectRatio: 2.0,
@@ -123,7 +124,7 @@ class PropertyVisualization extends StatelessWidget {
               clipData: const FlClipData.all(),
               titlesData: FlTitlesData(
                 bottomTitles: AxisTitles(
-                  axisNameWidget: const Text('Time'),
+                  axisNameWidget: const Text("Time"),
                   axisNameSize: 24,
                   sideTitles: SideTitles(
                     showTitles: true,
@@ -146,14 +147,12 @@ class PropertyVisualization extends StatelessWidget {
                   axisNameWidget: axisTitle,
                   axisNameSize: 24,
                   sideTitles: const SideTitles(
-                    showTitles: false,
                     reservedSize: 0,
                   ),
                 ),
               ),
               lineBarsData: [
                 LineChartBarData(
-                  show: true,
                   isCurved: true,
                   spots: _spots,
                 ),

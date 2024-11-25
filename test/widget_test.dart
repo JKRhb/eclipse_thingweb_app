@@ -4,12 +4,11 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:flutter_test/flutter_test.dart';
-
-import 'package:eclipse_thingweb_app/main.dart';
+import "package:eclipse_thingweb_app/main.dart";
+import "package:flutter_test/flutter_test.dart";
 
 void main() {
-  testWidgets('Basic app test', (WidgetTester tester) async {
+  testWidgets("Basic app test", (tester) async {
     await tester.pumpWidget(const WotApp());
   });
 }

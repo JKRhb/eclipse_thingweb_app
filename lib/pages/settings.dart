@@ -4,14 +4,14 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:eclipse_thingweb_app/providers/security_settings_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_settings_ui/flutter_settings_ui.dart';
-import 'package:go_router/go_router.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:flutter_settings_ui/flutter_settings_ui.dart";
+import "package:go_router/go_router.dart";
 
-import '../providers/discovery_settings_provider.dart';
+import "../providers/discovery_settings_provider.dart";
+import "../providers/security_settings_provider.dart";
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({
@@ -31,9 +31,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ref.watch(discoveryMethodEnabledProvider(discoveryMethod));
 
     return SettingsTile.switchTile(
-      title: Text('Use $sectionTitle'),
+      title: Text("Use $sectionTitle"),
       leading: const Icon(Icons.navigation),
-      onToggle: (bool value) async {
+      onToggle: (value) async {
         await ref
             .read(discoveryMethodEnabledProvider(discoveryMethod).notifier)
             .toggle();
@@ -51,12 +51,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return SettingsTile.switchTile(
       title: Text(label),
       leading: const Icon(Icons.navigation),
-      onToggle: (bool value) async {
+      onToggle: (value) async {
         final notifier =
             ref.read(booleanProvider.notifier) as BooleanSettingNotifier;
         await notifier.toggle();
       },
-      initialValue: settingEnabled.value,
+      initialValue: settingEnabled.value as bool,
     );
   }
 
@@ -74,7 +74,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _createSettingsSectionTitle(sectionTitle, discoveryMethod),
         if (methodEnabled.value == true)
           SettingsTile.navigation(
-            title: const Text('Add Discovery URL'),
+            title: const Text("Add Discovery URL"),
             leading: const Icon(Icons.add),
             onPressed: (context) {
               context.push(
@@ -93,10 +93,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               title: Text(uri.toString()),
               trailing: IconButton(
                 onPressed: () {
-                  final notifier =
-                      ref.read(discoveryUrlProvider(discoveryMethod).notifier);
-
-                  notifier.remove(uri);
+                  ref
+                      .read(discoveryUrlProvider(discoveryMethod).notifier)
+                      .remove(uri);
                 },
                 icon: const Icon(Icons.remove),
                 tooltip: "Remove Discovery URL",
@@ -164,25 +163,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             title: const Text("Security Settings"),
             tiles: [
               SettingsTile.navigation(
-                title: const Text('Add Trusted Certificate'),
+                title: const Text("Add Trusted Certificate"),
                 leading: const Icon(Icons.add),
                 onPressed: (context) async {
-                  context.push(
-                    "/certificate-form",
-                    extra: null,
-                  );
+                  await context.push("/certificate-form");
                 },
               ),
-              ...(trustedCertificates).map(
+              ...trustedCertificates.map(
                 (trustedCertificate) => SettingsTile(
                   leading: const Icon(Icons.link),
                   title: Text(trustedCertificate.label),
                   trailing: IconButton(
                     onPressed: () {
-                      final notifier =
-                          ref.read(trustedCertificatesProvider.notifier);
-
-                      notifier.remove(trustedCertificate.label);
+                      ref
+                          .read(trustedCertificatesProvider.notifier)
+                          .remove(trustedCertificate.label);
                     },
                     icon: const Icon(Icons.remove),
                     tooltip: "Remove Certificate",

@@ -4,23 +4,23 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:dart_wot/core.dart' as dart_wot;
-import 'package:eclipse_thingweb_app/providers/interaction_provider.dart';
-import 'package:eclipse_thingweb_app/providers/subscription_provider.dart';
-import 'package:eclipse_thingweb_app/providers/affordance_state_provider.dart';
-import 'package:eclipse_thingweb_app/util/snackbar.dart';
-import 'package:eclipse_thingweb_app/widgets/property_visualization.dart';
-import 'package:flutter/material.dart';
-
 import "dart:developer" as developer;
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
+import "package:dart_wot/core.dart" as dart_wot;
+import "package:dart_wot/core.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:loading_animation_widget/loading_animation_widget.dart";
+
+import "../providers/affordance_state_provider.dart";
+import "../providers/interaction_provider.dart";
+import "../providers/subscription_provider.dart";
+import "../util/snackbar.dart";
+import "property_visualization.dart";
 
 part "action_widget.dart";
-part "property_widget.dart";
 part "event_widget.dart";
+part "property_widget.dart";
 
 abstract base class AffordanceWidget extends ConsumerStatefulWidget {
   const AffordanceWidget(
@@ -28,12 +28,6 @@ abstract base class AffordanceWidget extends ConsumerStatefulWidget {
     this._affordanceKey, {
     super.key,
   });
-
-  final ConsumedThing _consumedThing;
-
-  InteractionAffordance get _interactionAffordance;
-
-  final String _affordanceKey;
 
   factory AffordanceWidget.create(
     ConsumedThing consumedThing,
@@ -43,14 +37,20 @@ abstract base class AffordanceWidget extends ConsumerStatefulWidget {
     switch (interactionAffordance) {
       case dart_wot.Action():
         return ActionWidget(
-            consumedThing, affordanceKey, interactionAffordance);
+            consumedThing, affordanceKey, interactionAffordance,);
       case Property():
         return PropertyWidget(
-            consumedThing, affordanceKey, interactionAffordance);
+            consumedThing, affordanceKey, interactionAffordance,);
       case Event():
         return EventWidget(consumedThing, affordanceKey, interactionAffordance);
     }
   }
+
+  final ConsumedThing _consumedThing;
+
+  InteractionAffordance get _interactionAffordance;
+
+  final String _affordanceKey;
 
   AffordanceType get affordanceType {
     switch (_interactionAffordance) {

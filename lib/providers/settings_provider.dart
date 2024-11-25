@@ -4,14 +4,15 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:shared_preferences/shared_preferences.dart";
 
 final _preferences = SharedPreferencesAsync();
 
 final booleanPreferencesProvider =
     AsyncNotifierProvider.family<BooleanPreferenceNotifier, bool?, String>(
-        BooleanPreferenceNotifier.new);
+  BooleanPreferenceNotifier.new,
+);
 
 class BooleanPreferenceNotifier extends FamilyAsyncNotifier<bool?, String> {
   @override
@@ -32,7 +33,8 @@ class BooleanPreferenceNotifier extends FamilyAsyncNotifier<bool?, String> {
 
 final doublePreferencesProvider =
     AsyncNotifierProvider.family<DoublePreferenceNotifier, double?, String>(
-        DoublePreferenceNotifier.new);
+  DoublePreferenceNotifier.new,
+);
 
 class DoublePreferenceNotifier extends FamilyAsyncNotifier<double?, String> {
   @override
@@ -53,7 +55,8 @@ class DoublePreferenceNotifier extends FamilyAsyncNotifier<double?, String> {
 
 final integerPreferencesProvider =
     AsyncNotifierProvider.family<IntegerPreferenceNotifier, int?, String>(
-        IntegerPreferenceNotifier.new);
+  IntegerPreferenceNotifier.new,
+);
 
 class IntegerPreferenceNotifier extends FamilyAsyncNotifier<int?, String> {
   @override
@@ -74,7 +77,8 @@ class IntegerPreferenceNotifier extends FamilyAsyncNotifier<int?, String> {
 
 final stringPreferencesProvider =
     AsyncNotifierProvider.family<StringPreferenceNotifier, String?, String>(
-        StringPreferenceNotifier.new);
+  StringPreferenceNotifier.new,
+);
 
 class StringPreferenceNotifier extends FamilyAsyncNotifier<String?, String> {
   @override

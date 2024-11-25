@@ -24,13 +24,13 @@ final class ActionWidget extends AffordanceWidget {
 final class _ActionState extends _AffordanceState<ActionWidget> {
   ConsumedThing get _consumedThing => widget._consumedThing;
 
-  void _invokeAction() async {
+  Future<void> _invokeAction() async {
     final value = ref.refresh(invokeActionProvider((
       _consumedThing,
       widget._affordanceKey,
       // TODO: Add provider for Action input state
       null,
-    )));
+    ),),);
 
     developer.log("$value");
   }
@@ -44,7 +44,7 @@ final class _ActionState extends _AffordanceState<ActionWidget> {
       thingDescriptionId: _consumedThing.thingDescription.id!,
       affordanceKey: widget._affordanceKey,
       affordanceType: widget.affordanceType
-    )));
+    ),),);
 
     developer.log("${data.lastOrNull}");
 

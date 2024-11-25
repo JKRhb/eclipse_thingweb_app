@@ -4,18 +4,18 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:dart_wot/core.dart';
-import 'package:eclipse_thingweb_app/main.dart';
+import "package:dart_wot/core.dart";
+import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:go_router/go_router.dart";
 
-import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
-import 'package:eclipse_thingweb_app/providers/event_notifications_provider.dart';
-import 'package:eclipse_thingweb_app/providers/thing_description_provider.dart';
-import 'package:eclipse_thingweb_app/util/snackbar.dart';
-import 'package:eclipse_thingweb_app/widgets/notifications_badge.dart';
-import 'package:eclipse_thingweb_app/widgets/thing_icon.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import "../providers/discovery_settings_provider.dart";
+import "../providers/event_notifications_provider.dart";
+import "../providers/thing_description_provider.dart";
+import "../providers/wot_providers.dart";
+import "../util/snackbar.dart";
+import "../widgets/notifications_badge.dart";
+import "../widgets/thing_icon.dart";
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({
@@ -36,7 +36,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         .addThingDescription(thingDescription);
   }
 
-  void _startDiscovery(BuildContext context) async {
+  Future<void> _startDiscovery(BuildContext context) async {
     final wot = await ref.watch(wotProvider.future);
     final discoveryConfigurations =
         await ref.watch(discoveryConfigurationsProvider.future);
@@ -107,10 +107,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           if (hasThingDescriptions)
             FloatingActionButton(
               onPressed: () {
-                final thingDescriptionNotifier =
-                    ref.read(thingDescriptionProvider.notifier);
-
-                thingDescriptionNotifier.clear();
+                ref.read(thingDescriptionProvider.notifier).clear();
               },
               heroTag: "btn2",
               child: const Icon(Icons.clear),
@@ -153,7 +150,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       return;
                     }
 
-                    context.push(
+                    await context.push(
                       "/thing",
                       extra: thingDescription,
                     );
