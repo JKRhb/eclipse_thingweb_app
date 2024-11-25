@@ -4,42 +4,84 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import 'dart:convert';
+
+import 'package:dart_wot/binding_coap.dart';
 import 'package:dart_wot/binding_mqtt.dart';
 import 'package:dart_wot/binding_http.dart';
 import 'package:dart_wot/core.dart';
-import 'package:eclipse_thingweb_app/pages/graph.dart';
+
+import 'package:eclipse_thingweb_app/pages/events.dart';
+import 'package:eclipse_thingweb_app/pages/forms/discovery_uri_form.dart';
+import 'package:eclipse_thingweb_app/pages/forms/trusted_certificate_form.dart';
+import 'package:eclipse_thingweb_app/pages/thing.dart';
+import 'package:eclipse_thingweb_app/providers/discovery_settings_provider.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'dart:developer';
 
 import 'pages/home.dart';
 import 'pages/settings.dart';
+import 'providers/security_settings_provider.dart';
 
-const discoveryMethodSettingsKey = "discovery-method-key";
-const discoveryUrlSettingsKey = "discovery-url-key";
-const propertyNameSettingsKey = "property-name-key";
+final httpClientConfigProvider = FutureProvider.autoDispose((ref) async {
+  final labeledCertificates =
+      await ref.watch(trustedCertificatesProvider.future);
 
-const defaultDiscoveryMethod = "Direct";
+  return HttpClientConfig(
+    trustedCertificates: labeledCertificates
+        .map((labeledCertificate) => (
+              certificate:
+                  utf8.encode(labeledCertificate.certificate.certificate),
+              password: labeledCertificate.certificate.password
+            ))
+        .toList(),
+  );
+});
+
+final wotProvider = FutureProvider.autoDispose((ref) async {
+  final httpClientConfig = await ref.watch(httpClientConfigProvider.future);
+
+  final servient = Servient.create(
+    clientFactories: [
+      CoapClientFactory(),
+      MqttClientFactory(),
+      HttpClientFactory(
+        httpClientConfig: httpClientConfig,
+      ),
+    ],
+  );
+
+  return servient.start();
+});
+
+final consumedThingProvider = FutureProvider.autoDispose
+    .family<ConsumedThing, ThingDescription>((ref, thingDescription) async {
+  final wot = await ref.watch(wotProvider.future);
+
+  return wot.consume(thingDescription);
+});
 
 Future<void> main() async {
-  final servient = Servient.create(clientFactories: [
-    MqttClientFactory(),
-    HttpClientFactory(),
-  ]);
-  final wot = servient.startClientFactories();
+  log("Starting app.");
 
-  final preferences = SharedPreferencesAsync();
-
-  runApp(WotApp(wot, preferences));
+  runApp(
+    const ProviderScope(
+      child: WotApp(),
+    ),
+  );
 }
 
+typedef _DiscoveryUriFormsParameter = ({
+  DiscoveryMethod discoveryMethod,
+  Uri? initialUrl,
+});
+
 class WotApp extends StatelessWidget {
-  const WotApp(this._wot, this._preferences, {super.key});
-
-  final WoT _wot;
-
-  final SharedPreferencesAsync _preferences;
+  const WotApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -65,30 +107,48 @@ class WotApp extends StatelessWidget {
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => HomePage(
-              _wot,
-              _preferences,
+            builder: (context, state) => const HomePage(
               title: title,
             ),
           ),
           GoRoute(
             path: "/settings",
-            builder: (context, state) => SettingsPage(_preferences),
+            builder: (context, state) => const SettingsPage(),
           ),
           GoRoute(
-            path: '/graph',
+            path: "/events",
+            builder: (context, state) => const EventsPage(),
+          ),
+          GoRoute(
+            path: "/form",
             builder: (context, state) {
-              final data = state.extra;
+              final discoveryParameters =
+                  state.extra as _DiscoveryUriFormsParameter;
 
-              if (data is! GraphData) {
-                throw StateError("Got $data, ${data.runtimeType}");
-              }
+              return DiscoveryUriFormsPage(
+                discoveryParameters.discoveryMethod,
+                initialUrl: discoveryParameters.initialUrl,
+              );
+            },
+          ),
+          GoRoute(
+            path: "/certificate-form",
+            builder: (context, state) {
+              final existingCertificate = state.extra as LabeledCertificate?;
 
-              return GraphPage(
-                _wot,
-                data.thingDescription,
-                data.propertyName,
-                title: title,
+              return TrustedCertificateFormPage(
+                "Add a Trusted Certificate",
+                initialValue: existingCertificate,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/thing',
+            builder: (context, state) {
+              final data = state.extra as ThingDescription;
+
+              return ThingPage(
+                data,
               );
             },
           ),
