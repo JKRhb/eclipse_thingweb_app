@@ -1,3 +1,5 @@
+[![Build](https://github.com/JKRhb/eclipse_thingweb_app/actions/workflows/ci.yml/badge.svg)](https://github.com/JKRhb/eclipse_thingweb_app/actions/workflows/ci.yml)
+
 # Eclipse Thingweb App
 
 This repository contains a Flutter app built upon the Eclipse Thingweb project
