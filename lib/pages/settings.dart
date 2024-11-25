@@ -4,239 +4,196 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import 'package:eclipse_thingweb_app/main.dart';
-import 'package:eclipse_thingweb_app/widgets/input_form.dart';
+import 'package:dart_wot/core.dart';
+import 'package:eclipse_thingweb_app/providers/security_settings_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_settings_ui/flutter_settings_ui.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage(
-    this._preferencesAsync, {
+import '../providers/discovery_settings_provider.dart';
+
+class SettingsPage extends ConsumerStatefulWidget {
+  const SettingsPage({
     super.key,
   });
 
-  final SharedPreferencesAsync _preferencesAsync;
-
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  _SettingsPageState();
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  SettingsTile _createSettingsSectionTitle(
+    String sectionTitle,
+    DiscoveryMethod discoveryMethod,
+  ) {
+    final methodEnabled =
+        ref.watch(discoveryMethodEnabledProvider(discoveryMethod));
 
-  late Future<String?> _discoveryMethod;
-
-  late Future<String?> _discoveryUrl;
-
-  late Future<String?> _propertyName;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _discoveryMethod =
-        widget._preferencesAsync.getString(discoveryMethodSettingsKey);
-    _discoveryUrl = widget._preferencesAsync.getString(discoveryUrlSettingsKey);
-    _propertyName = widget._preferencesAsync.getString(propertyNameSettingsKey);
+    return SettingsTile.switchTile(
+      title: Text('Use $sectionTitle'),
+      leading: const Icon(Icons.navigation),
+      onToggle: (bool value) async {
+        await ref
+            .read(discoveryMethodEnabledProvider(discoveryMethod).notifier)
+            .toggle();
+      },
+      initialValue: methodEnabled.value,
+    );
   }
 
-  static String _formatDiscoveryUrl(String? discoveryUrl) {
-    const maxUrlLength = 20;
+  SettingsTile _createBooleanSettingsTile(
+    AsyncNotifierFamilyProvider booleanProvider,
+    String label,
+  ) {
+    final settingEnabled = ref.watch(booleanProvider);
 
-    if (discoveryUrl == null) {
-      return "Unset";
-    }
+    return SettingsTile.switchTile(
+      title: Text(label),
+      leading: const Icon(Icons.navigation),
+      onToggle: (bool value) async {
+        final notifier =
+            ref.read(booleanProvider.notifier) as BooleanSettingNotifier;
+        await notifier.toggle();
+      },
+      initialValue: settingEnabled.value,
+    );
+  }
 
-    if (discoveryUrl.length > maxUrlLength) {
-      return "${discoveryUrl.substring(0, maxUrlLength)}...";
-    }
+  SettingsSection _createUrlSettingsSection(
+    String sectionTitle,
+    DiscoveryMethod discoveryMethod,
+  ) {
+    final methodEnabled =
+        ref.watch(discoveryMethodEnabledProvider(discoveryMethod));
+    final discoveryUrls = ref.watch(discoveryUrlProvider(discoveryMethod));
 
-    return discoveryUrl;
+    return SettingsSection(
+      title: Text(sectionTitle),
+      tiles: [
+        _createSettingsSectionTitle(sectionTitle, discoveryMethod),
+        if (methodEnabled.value == true)
+          SettingsTile.navigation(
+            title: const Text('Add Discovery URL'),
+            leading: const Icon(Icons.add),
+            onPressed: (context) {
+              context.push(
+                "/form",
+                extra: (
+                  discoveryMethod: discoveryMethod,
+                  initialUrl: null,
+                ),
+              );
+            },
+          ),
+        if (methodEnabled.value == true)
+          ...(discoveryUrls.value ?? <Uri>[]).map(
+            (uri) => SettingsTile(
+              leading: const Icon(Icons.link),
+              title: Text(uri.toString()),
+              trailing: IconButton(
+                onPressed: () {
+                  final notifier =
+                      ref.read(discoveryUrlProvider(discoveryMethod).notifier);
+
+                  notifier.remove(uri);
+                },
+                icon: const Icon(Icons.remove),
+                tooltip: "Remove Discovery URL",
+              ),
+              onPressed: (context) {
+                context.push(
+                  "/form",
+                  extra: (
+                    discoveryMethod: discoveryMethod,
+                    initialUrl: uri,
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final mdnsEnabled =
+        ref.watch(discoveryMethodEnabledProvider(DiscoveryMethod.mdns)).value ??
+            false;
+    final trustedCertificates =
+        ref.watch(trustedCertificatesProvider).value ?? [];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
+      // TODO: Move discovery settings to their own page
       body: SettingsList(
         sections: [
+          _createUrlSettingsSection(
+            "Direct Discovery",
+            DiscoveryMethod.direct,
+          ),
+          _createUrlSettingsSection(
+            "Directory Discovery",
+            DiscoveryMethod.directory,
+          ),
           SettingsSection(
+            title: const Text("DNS-SD"),
             tiles: [
-              SettingsTile(
-                title: const Text('Discovery URL'),
-                trailing: FutureBuilder(
-                  future: _discoveryUrl,
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    } else {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-
-                      final currentDiscoveryUrl = snapshot.data;
-                      final formattedDiscoveryUrl =
-                          _formatDiscoveryUrl(currentDiscoveryUrl);
-
-                      return Text(formattedDiscoveryUrl);
-                    }
-                  },
+              _createSettingsSectionTitle(
+                "DNS-SD",
+                DiscoveryMethod.mdns,
+              ),
+              if (mdnsEnabled)
+                _createBooleanSettingsTile(
+                  mdnsConfigurationProvider(ProtocolType.tcp),
+                  "HTTP-based Discovery",
                 ),
-                leading: const Icon(Icons.link),
-                onPressed: (BuildContext context) async {
-                  final currentValue = await widget._preferencesAsync
-                      .getString(discoveryUrlSettingsKey);
+              if (mdnsEnabled)
+                _createBooleanSettingsTile(
+                  mdnsConfigurationProvider(ProtocolType.udp),
+                  "CoAP-based Discovery",
+                ),
+            ],
+          ),
+          SettingsSection(
+            title: const Text("Security Settings"),
+            tiles: [
+              SettingsTile.navigation(
+                title: const Text('Add Trusted Certificate'),
+                leading: const Icon(Icons.add),
+                onPressed: (context) async {
+                  context.push(
+                    "/certificate-form",
+                    extra: null,
+                  );
+                },
+              ),
+              ...(trustedCertificates).map(
+                (trustedCertificate) => SettingsTile(
+                  leading: const Icon(Icons.link),
+                  title: Text(trustedCertificate.label),
+                  trailing: IconButton(
+                    onPressed: () {
+                      final notifier =
+                          ref.read(trustedCertificatesProvider.notifier);
 
-                  final result = await _openDialog(
-                    "Enter a Discovery URL",
-                    currentValue,
-                    validator: (value) {
-                      final parsedUrl = Uri.tryParse(value ?? "");
-
-                      if (parsedUrl == null) {
-                        return "Please enter a valid URL";
-                      }
-
-                      return null;
+                      notifier.remove(trustedCertificate.label);
                     },
-                  );
-
-                  if (result == null) {
-                    await widget._preferencesAsync
-                        .remove(discoveryUrlSettingsKey);
-
-                    setState(() {
-                      _discoveryUrl = Future.value(null);
-                    });
-                    return;
-                  }
-
-                  await widget._preferencesAsync.setString(
-                    discoveryUrlSettingsKey,
-                    result,
-                  );
-
-                  setState(() {
-                    _discoveryUrl = Future.value(result);
-                  });
-                },
-              ),
-              SettingsTile(
-                title: const Text('Discovery Method'),
-                leading: const Icon(Icons.language),
-                trailing: FutureBuilder(
-                  future: _discoveryMethod,
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    } else {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-
-                      final currentDiscoveryMethod = snapshot.data;
-
-                      return DropdownButton<String>(
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        value: currentDiscoveryMethod,
-                        onChanged: (String? newValue) async {
-                          if (newValue == null) {
-                            await widget._preferencesAsync
-                                .remove(discoveryMethodSettingsKey);
-
-                            setState(() {
-                              _discoveryMethod =
-                                  Future.value(defaultDiscoveryMethod);
-                            });
-                            return;
-                          }
-
-                          await widget._preferencesAsync.setString(
-                            discoveryMethodSettingsKey,
-                            newValue,
-                          );
-
-                          setState(() {
-                            _discoveryMethod = Future.value(newValue);
-                          });
-                        },
-                        items: <String>['Direct', 'Directory']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      );
-                    }
+                    icon: const Icon(Icons.remove),
+                    tooltip: "Remove Certificate",
+                  ),
+                  onPressed: (context) {
+                    context.push(
+                      "/certificate-form",
+                      extra: trustedCertificate,
+                    );
                   },
                 ),
-              ),
-              SettingsTile(
-                title: const Text('Property Name'),
-                leading: const Icon(Icons.featured_play_list),
-                trailing: FutureBuilder(
-                  future: _propertyName,
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    } else {
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-
-                      final currentPropertyName = snapshot.data;
-
-                      return Text(
-                        currentPropertyName ?? "Unset",
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    }
-                  },
-                ),
-                onPressed: (BuildContext context) async {
-                  final currentValue = await widget._preferencesAsync
-                      .getString(propertyNameSettingsKey);
-
-                  final result = await _openDialog(
-                    "Enter a Property Name",
-                    currentValue,
-                  );
-
-                  if (result == null) {
-                    await widget._preferencesAsync
-                        .remove(propertyNameSettingsKey);
-
-                    setState(() {
-                      _propertyName = Future.value(null);
-                    });
-                    return;
-                  }
-
-                  await widget._preferencesAsync.setString(
-                    propertyNameSettingsKey,
-                    result,
-                  );
-
-                  setState(() {
-                    _propertyName = Future.value(result);
-                  });
-                },
               ),
             ],
           ),
@@ -244,40 +201,4 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-
-  Future<String?> _openDialog(
-    String dialogTitle,
-    String? initialValue, {
-    String? Function(String?)? validator,
-  }) =>
-      showDialog<String>(
-        context: context,
-        builder: (context) => Dialog(
-          child: SizedBox(
-            height: 200,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Text(
-                    dialogTitle,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const Spacer(),
-                  InputForm(
-                    initialValue: initialValue,
-                    submitCallback: (value) {
-                      Navigator.of(context).pop(value);
-                    },
-                    cancelCallback: (value) {
-                      Navigator.of(context).pop(value);
-                    },
-                    validator: validator,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
 }
