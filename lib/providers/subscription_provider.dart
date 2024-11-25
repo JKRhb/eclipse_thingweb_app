@@ -39,11 +39,13 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
     String affordanceKey,
   ) =>
       state
-          .where((subscriptionState) =>
-              subscriptionState.thingDescriptionId ==
-                  consumedThing.thingDescription.id! &&
-              subscriptionState.subscriptionType == subscriptionType &&
-              subscriptionState.affordanceKey == affordanceKey,)
+          .where(
+            (subscriptionState) =>
+                subscriptionState.thingDescriptionId ==
+                    consumedThing.thingDescription.id! &&
+                subscriptionState.subscriptionType == subscriptionType &&
+                subscriptionState.affordanceKey == affordanceKey,
+          )
           .isNotEmpty;
 
   Future<void> addEventSubscription(
@@ -67,10 +69,12 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
 
     state = [
       ...state,
-      SubscriptionState(subscription,
-          thingDescriptionId: consumedThing.thingDescription.id!,
-          subscriptionType: SubscriptionType.event,
-          affordanceKey: affordanceKey,),
+      SubscriptionState(
+        subscription,
+        thingDescriptionId: consumedThing.thingDescription.id!,
+        subscriptionType: SubscriptionType.event,
+        affordanceKey: affordanceKey,
+      ),
     ];
   }
 
@@ -84,21 +88,27 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
 
       if (value is num) {
         ref
-            .read(affordanceStateHistoryProvider((
-              thingDescriptionId: consumedThing.thingDescription.id!,
-              affordanceKey: affordanceKey,
-              affordanceType: AffordanceType.property,
-            ),).notifier,)
+            .read(
+              affordanceStateHistoryProvider(
+                (
+                  thingDescriptionId: consumedThing.thingDescription.id!,
+                  affordanceKey: affordanceKey,
+                  affordanceType: AffordanceType.property,
+                ),
+              ).notifier,
+            )
             .update(value.toDouble());
       }
     });
 
     state = [
       ...state,
-      SubscriptionState(subscription,
-          thingDescriptionId: consumedThing.thingDescription.id!,
-          subscriptionType: SubscriptionType.property,
-          affordanceKey: affordanceKey,),
+      SubscriptionState(
+        subscription,
+        thingDescriptionId: consumedThing.thingDescription.id!,
+        subscriptionType: SubscriptionType.property,
+        affordanceKey: affordanceKey,
+      ),
     ];
   }
 

@@ -25,12 +25,16 @@ final class _ActionState extends _AffordanceState<ActionWidget> {
   ConsumedThing get _consumedThing => widget._consumedThing;
 
   Future<void> _invokeAction() async {
-    final value = ref.refresh(invokeActionProvider((
-      _consumedThing,
-      widget._affordanceKey,
-      // TODO: Add provider for Action input state
-      null,
-    ),),);
+    final value = ref.refresh(
+      invokeActionProvider(
+        (
+          _consumedThing,
+          widget._affordanceKey,
+          // TODO: Add provider for Action input state
+          null,
+        ),
+      ),
+    );
 
     developer.log("$value");
   }
@@ -40,11 +44,15 @@ final class _ActionState extends _AffordanceState<ActionWidget> {
 
   @override
   List<Widget> get _cardButtons {
-    final data = ref.watch(affordanceStateHistoryProvider((
-      thingDescriptionId: _consumedThing.thingDescription.id!,
-      affordanceKey: widget._affordanceKey,
-      affordanceType: widget.affordanceType
-    ),),);
+    final data = ref.watch(
+      affordanceStateHistoryProvider(
+        (
+          thingDescriptionId: _consumedThing.thingDescription.id!,
+          affordanceKey: widget._affordanceKey,
+          affordanceType: widget.affordanceType
+        ),
+      ),
+    );
 
     developer.log("${data.lastOrNull}");
 

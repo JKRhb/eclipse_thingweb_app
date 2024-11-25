@@ -5,10 +5,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import "package:eclipse_thingweb_app/main.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flutter_test/flutter_test.dart";
 
 void main() {
   testWidgets("Basic app test", (tester) async {
-    await tester.pumpWidget(const WotApp());
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: WotApp(),
+      ),
+    );
   });
 }

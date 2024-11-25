@@ -53,7 +53,8 @@ final class _EventState extends _AffordanceState<EventWidget> {
 
     displaySuccessMessageSnackbar(
       context,
-      "Subscribed to Event: ${widget._interactionAffordance.title ?? widget._affordanceKey}",
+      "Subscribed to Event: "
+      "${widget._interactionAffordance.title ?? widget._affordanceKey}",
     );
   }
 

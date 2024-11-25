@@ -46,13 +46,15 @@ final invokeActionProvider = FutureProvider.autoDispose
   final value = await interactionOutput.value();
 
   ref
-      .read(affordanceStateHistoryProvider(
-        (
-          thingDescriptionId: consumedThing.thingDescription.id!,
-          affordanceKey: actionName,
-          affordanceType: AffordanceType.action,
-        ),
-      ).notifier,)
+      .read(
+        affordanceStateHistoryProvider(
+          (
+            thingDescriptionId: consumedThing.thingDescription.id!,
+            affordanceKey: actionName,
+            affordanceType: AffordanceType.action,
+          ),
+        ).notifier,
+      )
       .update(value);
 
   return value;

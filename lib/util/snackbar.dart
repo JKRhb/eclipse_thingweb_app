@@ -25,7 +25,10 @@ void displaySuccessMessageSnackbar(
 /// Before the message is displayed, the current [SnackBar] is going to be
 /// removed.
 void displayErrorMessageSnackbar(
-    BuildContext context, String errorTitle, String errorMessage,) {
+  BuildContext context,
+  String errorTitle,
+  String errorMessage,
+) {
   final snackbar = _createErrorSnackbar(errorTitle, errorMessage);
 
   _displaySnackbarMessage(context, snackbar);
