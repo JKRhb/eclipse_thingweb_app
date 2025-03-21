@@ -138,15 +138,18 @@ final discoveryConfigurationsProvider = FutureProvider((ref) async {
 
     if (mdnsCoapDiscoveryEnabled) {
       result.add(
-        const DnsSdDConfiguration(
+        DnsSdDConfiguration(
           protocolType: ProtocolType.udp,
+          // listenAddress: InternetAddress.anyIPv6,
         ),
       );
     }
 
     if (mdnsHttpDiscoveryEnabled) {
       result.add(
-        const DnsSdDConfiguration(),
+        DnsSdDConfiguration(
+            // listenAddress: InternetAddress.anyIPv6,
+            ),
       );
     }
   }

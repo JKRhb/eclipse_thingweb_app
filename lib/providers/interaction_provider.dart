@@ -9,27 +9,19 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "affordance_state_provider.dart";
 
-final readPropertyProvider = FutureProvider.autoDispose
-    .family<Object?, (ConsumedThing, String)>((ref, input) async {
+final writePropertyProvider = FutureProvider.autoDispose
+    .family<void, (ConsumedThing, String, InteractionInput)>(
+        (ref, input) async {
   final consumedThing = input.$1;
   final propertyName = input.$2;
+  final interactionInput = input.$3;
 
-  final interactionOutput = await consumedThing.readProperty(propertyName);
-  final value = await interactionOutput.value();
+  await consumedThing.writeProperty(propertyName, interactionInput);
 
-  ref
-      .read(
-        affordanceStateHistoryProvider(
-          (
-            thingDescriptionId: consumedThing.thingDescription.id!,
-            affordanceKey: propertyName,
-            affordanceType: AffordanceType.property,
-          ),
-        ).notifier,
-      )
-      .update(value);
+  // TODO: Get rid of this workaround
+  await Future.delayed(const Duration(milliseconds: 500));
 
-  return value;
+  // ref.invalidate(readPropertyProvider((consumedThing, propertyName)));
 });
 
 final invokeActionProvider = FutureProvider.autoDispose

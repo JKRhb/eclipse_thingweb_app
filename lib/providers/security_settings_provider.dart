@@ -47,6 +47,27 @@ class TrustedCertficatesNotifier
       }
     }
 
+    result.add(
+      (
+        label: "",
+        certificate: (
+          certificate: """
+-----BEGIN CERTIFICATE-----
+MIIBqTCCAU6gAwIBAgIRAIzevxVmNl7O6SEPCZv85m0wCgYIKoZIzj0EAwIwMjET
+MBEGA1UEChMKTUFWRVJJQyBDQTEbMBkGA1UEAxMSTUFWRVJJQyBDQSBSb290IENB
+MB4XDTI0MDUyMTE3NDI0MFoXDTM0MDUxOTE3NDI0MFowMjETMBEGA1UEChMKTUFW
+RVJJQyBDQTEbMBkGA1UEAxMSTUFWRVJJQyBDQSBSb290IENBMFkwEwYHKoZIzj0C
+AQYIKoZIzj0DAQcDQgAEIviRt+k/mPsECvGLoqQGRaiHJcqiq7pctBtnTJkUEXbE
+kup5VZKubveebOsHsMV04twrhV+Ii5OXZzrDAy5ZdqNFMEMwDgYDVR0PAQH/BAQD
+AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFI5Fj37mVhrQByhnbCTg
+aRE0In3zMAoGCCqGSM49BAMCA0kAMEYCIQCNA98Z0r0X8r/2DkosNJL2GTwloiQK
+wOgGqnHNFHkXgQIhAMgvDvU6/QzFd+ihMnCSC/ChM9z5/l9I+OqFUyerjklP
+-----END CERTIFICATE-----""",
+          password: null
+        )
+      ),
+    );
+
     return result;
   }
 

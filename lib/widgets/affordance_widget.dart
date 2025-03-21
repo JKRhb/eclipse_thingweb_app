@@ -5,18 +5,24 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import "dart:developer" as developer;
+import "dart:io";
+import "dart:typed_data";
 
 import "package:dart_wot/core.dart" as dart_wot;
 import "package:dart_wot/core.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:loading_animation_widget/loading_animation_widget.dart";
+// import "package:loading_animation_widget/loading_animation_widget.dart";
 
 import "../providers/affordance_state_provider.dart";
 import "../providers/interaction_provider.dart";
 import "../providers/subscription_provider.dart";
 import "../util/snackbar.dart";
+import "affordance_controls.dart";
 import "property_visualization.dart";
+
+// import "package:dart_wot/src/core/implementation/interaction_output.dart"
+//     as remove_me;
 
 part "action_widget.dart";
 part "event_widget.dart";
@@ -72,6 +78,12 @@ abstract base class AffordanceWidget extends ConsumerStatefulWidget {
 
 abstract base class _AffordanceState<T extends AffordanceWidget>
     extends ConsumerState<T> {
+  Color get primaryBackgroundColor => Theme.of(context).primaryColor;
+
+  Color get onPrimaryTextColor => Theme.of(context).colorScheme.onPrimary;
+
+  IconData get affordanceSymbol;
+
   ListTile get _cardHeader {
     final cardTitle = Text(
       widget._interactionAffordance.title ?? widget._affordanceKey,
@@ -84,9 +96,17 @@ abstract base class _AffordanceState<T extends AffordanceWidget>
     return ListTile(
       title: cardTitle,
       subtitle: cardDescription,
-      trailing: Text(widget.affordanceType.toString()),
-      tileColor: Theme.of(context).primaryColor,
-      textColor: Theme.of(context).colorScheme.onPrimary,
+      leading: Icon(
+        affordanceSymbol,
+        color: onPrimaryTextColor,
+      ),
+      // trailing: Text(widget.affordanceType.toString()),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: _cardButtons,
+      ),
+      tileColor: primaryBackgroundColor,
+      textColor: onPrimaryTextColor,
     );
   }
 
@@ -103,16 +123,18 @@ abstract base class _AffordanceState<T extends AffordanceWidget>
       child: Column(
         children: [
           _cardHeader,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ..._statusWidgets,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: _cardButtons,
-              ),
-            ],
-          ),
+          ..._statusWidgets,
+
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     ..._statusWidgets,
+          //     // Row(
+          //     //   mainAxisAlignment: MainAxisAlignment.end,
+          //     //   children: _cardButtons,
+          //     // ),
+          //   ],
+          // ),
           ..._cardBody,
         ],
       ),

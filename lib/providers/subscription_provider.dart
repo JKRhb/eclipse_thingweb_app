@@ -4,11 +4,106 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
+import "dart:async";
+
 import "package:dart_wot/core.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
+import "../widgets/property_visualization.dart";
 import "affordance_state_provider.dart";
 import "event_notifications_provider.dart";
+
+class PropertyStateNotifier
+    extends FamilyAsyncNotifier<InteractionOutput?, (ConsumedThing, String)> {
+  AsyncValue<InteractionOutput?>? _oldState;
+
+  @override
+  Future<InteractionOutput?> build((ConsumedThing, String) ref) async {
+    return null;
+  }
+
+  void _setInteractionOutput(InteractionOutput interactionOutput) {
+    state = AsyncData(interactionOutput);
+  }
+
+  void setTemporaryValue(InteractionOutput interactionOutput) {
+    _oldState = state;
+    state = AsyncData(interactionOutput);
+  }
+
+  void revertTemporaryValue() {
+    final oldState = _oldState;
+    if (oldState != null) {
+      state = oldState;
+      _oldState = null;
+    }
+  }
+
+  Future<void> readProperty({bool addToHistory = false}) async {
+    final consumedThing = arg.$1;
+    final propertyName = arg.$2;
+
+    final oldState = state;
+
+    try {
+      final interactionOutput = await consumedThing.readProperty(propertyName);
+
+      // final value = await interactionOutput.value();
+      // if (addToHistory) {
+      //   ref
+      //       .read(
+      //         affordanceStateHistoryProvider(
+      //           (
+      //             affordanceKey: arg.$2,
+      //             affordanceType: AffordanceType.property,
+      //             thingDescriptionId: arg.$1.thingDescription.id!
+      //           ),
+      //         ).notifier,
+      //       )
+      //       .update(value);
+      // }
+
+      state = AsyncData(interactionOutput);
+    } on Exception {
+      state = oldState;
+    }
+  }
+}
+
+final propertyStateNotifier = AsyncNotifierProvider.family<
+    PropertyStateNotifier, InteractionOutput?, (ConsumedThing, String)>(
+  PropertyStateNotifier.new,
+);
+
+final propertyStateProvider =
+    FutureProvider.family<Object?, (ConsumedThing, String)>((ref, arg) async {
+  final interactionOutput = await ref.watch(propertyStateNotifier(arg).future);
+
+  return interactionOutput?.value();
+});
+
+final propertyStateStreamProvider =
+    FutureProvider.family<Stream<List<int>>, (ConsumedThing, String)>(
+        (ref, arg) async {
+  final interactionOutput = await ref.watch(propertyStateNotifier(arg).future);
+
+  // print(await interactionOutput?.value());
+
+  return interactionOutput?.data ?? const Stream.empty();
+});
+
+final propertyStateByteListProvider =
+    FutureProvider.family<List<int>, (ConsumedThing, String)>((ref, arg) async {
+  final stream = await ref.watch(propertyStateStreamProvider(arg).future);
+
+  final result = <int>[];
+
+  await for (final element in stream) {
+    result.addAll(element);
+  }
+
+  return result;
+});
 
 class SubscriptionState {
   SubscriptionState(
@@ -84,6 +179,16 @@ class _SubscriptionStateNotifier extends Notifier<List<SubscriptionState>> {
   ) async {
     final subscription = await consumedThing.observeProperty(affordanceKey,
         (interactionOutput) async {
+      ref
+          .read(propertyStateNotifier((consumedThing, affordanceKey)).notifier)
+          ._setInteractionOutput(interactionOutput);
+
+      if (!(consumedThing
+              .thingDescription.properties?[affordanceKey]?.isNumericDataType ??
+          false)) {
+        return;
+      }
+
       final value = await interactionOutput.value();
 
       if (value is num) {

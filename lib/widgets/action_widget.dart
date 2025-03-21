@@ -24,6 +24,9 @@ final class ActionWidget extends AffordanceWidget {
 final class _ActionState extends _AffordanceState<ActionWidget> {
   ConsumedThing get _consumedThing => widget._consumedThing;
 
+  @override
+  IconData get affordanceSymbol => Icons.flash_on;
+
   Future<void> _invokeAction() async {
     final value = ref.refresh(
       invokeActionProvider(
@@ -60,7 +63,10 @@ final class _ActionState extends _AffordanceState<ActionWidget> {
       IconButton(
         onPressed: _invokeAction,
         // TODO: Improve Icon and button behavior
-        icon: const Icon(Icons.pin_invoke),
+        icon: Icon(
+          Icons.pin_invoke,
+          color: onPrimaryTextColor,
+        ),
       ),
     ];
   }

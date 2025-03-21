@@ -22,6 +22,9 @@ final class EventWidget extends AffordanceWidget {
 }
 
 final class _EventState extends _AffordanceState<EventWidget> {
+  @override
+  IconData get affordanceSymbol => Icons.notifications;
+
   Future<void> _subscribeToEvent() async {
     final subscriptionState = ref.read(
       subscriptionStateProvider.notifier,

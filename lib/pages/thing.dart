@@ -122,6 +122,16 @@ class _ThingPageState extends ConsumerState<ThingPage> {
     return switch (consumedThing) {
       AsyncData(:final value) => Column(
           children: _interactionAffordances.entries
+              .where((interactionAffordanceEntry) {
+                // FIXME: Remove once writable properties are supported
+
+                final interactionAffordance = interactionAffordanceEntry.value;
+                if (interactionAffordance is! Property) {
+                  return true;
+                }
+
+                return !interactionAffordance.writeOnly;
+              })
               .map(
                 (interactionAffordanceEntry) => Padding(
                   padding: const EdgeInsets.only(top: 8.0),

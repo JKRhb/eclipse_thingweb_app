@@ -13,6 +13,10 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "../providers/affordance_state_provider.dart";
 
+extension PropertyFilters on Property {
+  bool get isNumericDataType => ["integer", "number"].contains(type);
+}
+
 class PropertyVisualization extends StatelessWidget {
   const PropertyVisualization(
     this._property,
@@ -23,18 +27,15 @@ class PropertyVisualization extends StatelessWidget {
     super.key,
   });
 
-  static bool _isNumericDataType(Property property) =>
-      ["integer", "number"].contains(property.type);
-
-  static PropertyVisualization? create(
+  factory PropertyVisualization.create(
     Property property,
     WidgetRef ref,
     String affordanceKey,
     int maxElements,
     String thingDescriptionId,
   ) {
-    if (!_isNumericDataType(property)) {
-      return null;
+    if (!property.isNumericDataType) {
+      throw ArgumentError("Expected a numeric data type.");
     }
 
     return PropertyVisualization(
@@ -98,6 +99,8 @@ class PropertyVisualization extends StatelessWidget {
     for (final dataPoint in data) {
       if (dataPoint is (int, double)) {
         result.add(dataPoint);
+      } else if (dataPoint is (int, int)) {
+        result.add((dataPoint.$1, dataPoint.$2.toDouble()));
       }
     }
 

@@ -41,7 +41,7 @@ class WotApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const title = "Eclipse Thingweb App";
+    const title = "Things";
 
     const thingwebPrimary = Color(0x00067362);
     const thingwebSecondary = Color(0x00B84A91);

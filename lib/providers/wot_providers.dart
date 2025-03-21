@@ -25,12 +25,29 @@ final httpClientConfigProvider = FutureProvider.autoDispose((ref) async {
   );
 });
 
+final coapClientConfigProvider = FutureProvider.autoDispose((ref) async {
+  final labeledCertificates =
+      await ref.watch(trustedCertificatesProvider.future);
+
+  return CoapConfig(
+    rootCertificates: labeledCertificates
+        .map(
+          (labeledCertificate) =>
+              PemCertificate(labeledCertificate.certificate.certificate),
+        )
+        .toList(),
+  );
+});
+
 final wotProvider = FutureProvider.autoDispose((ref) async {
   final httpClientConfig = await ref.watch(httpClientConfigProvider.future);
+  final coapClientConfig = await ref.watch(coapClientConfigProvider.future);
 
   final servient = Servient.create(
     clientFactories: [
-      CoapClientFactory(),
+      CoapClientFactory(
+        coapConfig: coapClientConfig,
+      ),
       MqttClientFactory(),
       HttpClientFactory(
         httpClientConfig: httpClientConfig,

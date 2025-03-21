@@ -24,6 +24,9 @@ final class PropertyWidget extends AffordanceWidget {
 final class _PropertyState extends _AffordanceState<PropertyWidget> {
   _PropertyState();
 
+  @override
+  IconData get affordanceSymbol => Icons.settings;
+
   ConsumedThing get _consumedThing => widget._consumedThing;
 
   Property get _property => widget._interactionAffordance;
@@ -36,6 +39,20 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    ref
+        .read(
+          propertyStateNotifier((widget._consumedThing, widget._affordanceKey))
+              .notifier,
+        )
+        .readProperty(
+          addToHistory: ["number", "integer"]
+              .contains(widget._interactionAffordance.type),
+        );
   }
 
   Future<void> _toggleObserve() async {
@@ -65,79 +82,113 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
 
   Widget get _readPropertyButton {
     final isLoading = ref
-        .watch(readPropertyProvider((_consumedThing, _propertyKey)))
+        .watch(propertyStateNotifier((_consumedThing, _propertyKey)))
         .isLoading;
 
     if (isLoading) {
-      return const IconButton(
+      return IconButton(
         onPressed: null,
         icon: SizedBox(
           height: 15,
           width: 15,
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            color: onPrimaryTextColor,
+          ),
         ),
+        color: onPrimaryTextColor,
         tooltip: "Reading property...",
       );
     }
 
     return IconButton(
-      onPressed: () =>
-          ref.refresh(readPropertyProvider((_consumedThing, _propertyKey))),
+      onPressed: () async {
+        await ref
+            .read(
+              propertyStateNotifier(
+                (_consumedThing, _propertyKey),
+              ).notifier,
+            )
+            .readProperty(
+              addToHistory: widget._interactionAffordance.isNumericDataType,
+            );
+      },
       tooltip: "Retrieve the latest property value",
       icon: const Icon(Icons.refresh),
+      color: onPrimaryTextColor,
     );
   }
 
   Widget get _currentValue {
-    final value =
-        ref.watch(readPropertyProvider((_consumedThing, _propertyKey)));
+    final imageFormIndex = _property.forms
+        .indexWhere((form) => form.contentType.startsWith("image"));
 
-    switch (value) {
-      case AsyncError(:final error):
-        developer.log(
-          "Getting the current value failed.",
-          name: "_PropertyState",
-          error: error,
-        );
-        return const Text("Failed to retrieve the property value.");
+    if (_property.type == null && imageFormIndex != -1) {
+      final propertyState = ref.watch(
+        propertyStateByteListProvider(
+          (widget._consumedThing, widget._affordanceKey),
+        ),
+      );
+
+      print(propertyState);
+
+      switch (propertyState) {
+        case AsyncData(:final value):
+          // print(value);
+          if (value.isEmpty) {
+            return const CircularProgressIndicator();
+          }
+
+          // File("test.jpeg").writeAsBytesSync(value);
+
+          return Image.memory(
+            Uint8List.fromList(value),
+            fit: BoxFit.fitWidth,
+            width: MediaQuery.of(context).size.width,
+            gaplessPlayback: true,
+          );
+        case AsyncError():
+          return const Text("Failed to retrieve image data");
+        default:
+          return const CircularProgressIndicator();
+      }
+    }
+
+    final output = ref.watch(
+      propertyStateProvider((widget._consumedThing, widget._affordanceKey)),
+    );
+
+    switch (output) {
       case AsyncData(:final value):
         return Text(value.toString());
       default:
-        return LoadingAnimationWidget.staggeredDotsWave(
-          color: Colors.black,
-          size: 20,
-        );
+        return const CircularProgressIndicator();
     }
   }
 
   @override
   List<Widget> get _statusWidgets {
     return [
-      Container(
-        padding: const EdgeInsets.all(16.0),
-        alignment: Alignment.centerLeft,
-        child: Row(
-          children: [
-            const Text("Current value: "),
-            _currentValue,
-          ],
-        ),
-      ),
+      if (!_property.writeOnly) _currentValue,
     ];
   }
 
   @override
   List<Widget> get _cardBody {
-    final propertyVisualization = PropertyVisualization.create(
-      _property,
-      ref,
-      widget._affordanceKey,
-      _maxElements,
-      widget._consumedThing.thingDescription.id!,
-    );
-
     return [
-      if (propertyVisualization != null) propertyVisualization,
+      if (!_property.readOnly)
+        AffordanceControlsWidget(
+          widget._affordanceKey,
+          _property,
+          _consumedThing,
+        ),
+      if (widget._interactionAffordance.isNumericDataType)
+        PropertyVisualization.create(
+          _property,
+          ref,
+          widget._affordanceKey,
+          _maxElements,
+          widget._consumedThing.thingDescription.id!,
+        ),
     ];
   }
 
@@ -169,6 +220,7 @@ final class _PropertyState extends _AffordanceState<PropertyWidget> {
           tooltip: observeButtonTooltip,
           icon: Icon(
             !isSubscribed ? Icons.remove_red_eye : Icons.cancel,
+            color: onPrimaryTextColor,
           ),
         ),
     ];
